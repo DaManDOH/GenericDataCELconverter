@@ -4,7 +4,7 @@
 		return _name;
 	}
 
-	const std::wstring & DataHeaderParameter::getParamValue() {
+	const std::string & DataHeaderParameter::getParamValue() {
 		return _value;
 	}
 
@@ -16,7 +16,7 @@
 		_name = newName;
 	}
 
-	void DataHeaderParameter::setParamValue(const std::wstring & newValue) {
+	void DataHeaderParameter::setParamValue(const std::string & newValue) {
 		_value = newValue;
 	}
 

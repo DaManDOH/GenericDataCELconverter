@@ -25,7 +25,7 @@ int extractIntFromFile(ifstream & sourceFile) {
 	dummy2 = sourceFile.get();
 	dummy3 = sourceFile.get();
 	dummy4 = sourceFile.get();
-	retval = ((int)dummy1 << 12) + ((int)dummy2 << 8) + ((int)dummy3 << 4) + (int)dummy4;
+	retval = ((int)dummy1 << 24) + ((int)dummy2 << 16) + ((int)dummy3 << 8) + (int)dummy4;
 
 	return retval;
 }
@@ -39,7 +39,7 @@ unsigned int extractUintFromFile(ifstream & sourceFile) {
 	dummy2 = sourceFile.get();
 	dummy3 = sourceFile.get();
 	dummy4 = sourceFile.get();
-	retval = ((unsigned int)dummy1 << 12) + ((unsigned int)dummy2 << 8) + ((unsigned int)dummy3 << 4) + (unsigned int)dummy4;
+	retval = ((unsigned int)dummy1 << 24) + ((unsigned int)dummy2 << 16) + ((unsigned int)dummy3 << 8) + (unsigned int)dummy4;
 
 	return retval;
 }
@@ -48,6 +48,7 @@ bool extractStringFromFile(ifstream & sourceFile, string & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
 	char oneChar;
 
+	result.resize(aStringLen);
 	result.clear();
 	for (int i = 0; i < aStringLen; i++) {
 		oneChar = sourceFile.get();
@@ -62,27 +63,9 @@ bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 	char oneChar;
 	wchar_t oneWchar;
 
+	result.resize(aStringLen);
 	result.clear();
 	for (int i = 0; i < aStringLen; i++) {
-		oneChar = sourceFile.get();
-		oneWchar = (wchar_t)oneChar << 8;
-		oneChar = sourceFile.get();
-		oneWchar += (wchar_t)oneChar;
-		result.append(1, oneWchar);
-	}
-
-	return true;
-}
-
-// Here, the integer preceding the string represents the
-// number of bytes, not the wide character count.
-bool extractValueFromFile(ifstream & sourceFile, wstring & result) {
-	int aStringLen = extractIntFromFile(sourceFile);
-	char oneChar;
-	wchar_t oneWchar;
-
-	result.clear();
-	for (int i = 0; i < aStringLen/2; i++) {
 		oneChar = sourceFile.get();
 		oneWchar = (wchar_t)oneChar << 8;
 		oneChar = sourceFile.get();
@@ -112,32 +95,45 @@ bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & start
 	return true;
 }
 
+bool extractOneTriple (ifstream & sourceFile, DataHeaderParameter & oneParameter) {
+	string dummyString;
+	wstring dummyWstring;
+	
+	extractWstringFromFile(sourceFile, dummyWstring);
+	oneParameter.setParamName(dummyWstring);
+	extractStringFromFile(sourceFile, dummyString);
+	oneParameter.setParamValue(dummyString);
+	extractWstringFromFile(sourceFile, dummyWstring);
+	oneParameter.setParamType(dummyWstring);
+
+	return true;
+}
+
+bool extractNameTypeValueTrips(ifstream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
+	int paramCount = extractIntFromFile(sourceFile);
+
+	vectorToStoreParameters.reserve(paramCount);
+	for (int i = 0; i < paramCount; i++) {
+		DataHeaderParameter newDHP;
+		extractOneTriple(sourceFile, newDHP);
+		vectorToStoreParameters.push_back(newDHP);
+	}
+
+	return true;
+}
+
 bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
-	int paramCount;
 	string dataTypeID;
 	string fileGUID;
 	wstring timeOfCreation;
 	wstring fileLocale;
-	wstring dummyWstring;
 
 	extractStringFromFile(sourceFile, dataTypeID);
 	extractStringFromFile(sourceFile, fileGUID);
 	extractWstringFromFile(sourceFile, timeOfCreation);
 	extractWstringFromFile(sourceFile, fileLocale);
+	extractNameTypeValueTrips(sourceFile, vectorToStoreParameters);
 
-	paramCount = extractIntFromFile(sourceFile);
-	vectorToStoreParameters.reserve(paramCount);
-	for (int i = 0; i < paramCount; i++) {
-		DataHeaderParameter newDHP;
-		extractWstringFromFile(sourceFile, dummyWstring);
-		newDHP.setParamName(dummyWstring);
-		extractValueFromFile(sourceFile, dummyWstring);
-		newDHP.setParamValue(dummyWstring);
-		extractWstringFromFile(sourceFile, dummyWstring);
-		newDHP.setParamType(dummyWstring);
-		vectorToStoreParameters.push_back(newDHP);
-	}
-	
 	return true;
 }
 
@@ -149,7 +145,7 @@ int main( int argc, char * argv[] ) {
 		return -1;
 	}
 
-	int numberOfDataGroups;
+	int numberOfDataGroups, parentHeaderCount;
 	unsigned int dataGroupStartPos;
 
 	string filename = argv[1]; // A little buffer overflow protection.
@@ -159,10 +155,82 @@ int main( int argc, char * argv[] ) {
 		return -2;
 	}
 
-	vector<DataHeaderParameter> paramVector;
+	vector<DataHeaderParameter> headerParamVector;
 
-	if (!extractGenericDataHeader(ccgdCelFile, paramVector)) {
+	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
 		return -3;
+	}
+
+	// Debug
+	cout << "ccgdCelFile.tellg(): " << ccgdCelFile.tellg() << endl;
+
+	// Extract and ignore parent Generic Data Headers
+	vector<DataHeaderParameter> parentParamVector; // Debug
+	parentHeaderCount = extractIntFromFile(ccgdCelFile);
+	for (int i = 0; i < parentHeaderCount; i++) {
+		// Debug: vector<DataHeaderParameter> parentParamVector;
+		extractGenericDataHeader(ccgdCelFile, parentParamVector);
+	}
+
+
+	// TODO: Fix sync problem. Temp offset correction.
+	unsigned int extraThing01 = extractUintFromFile(ccgdCelFile);
+	string extraThing02;
+	extractStringFromFile(ccgdCelFile, extraThing02);
+	unsigned int extraThing03 = extractUintFromFile(ccgdCelFile);
+	unsigned int extraThing04 = extractUintFromFile(ccgdCelFile);
+	wstring extraLocale;
+	extractWstringFromFile(ccgdCelFile, extraLocale);
+	unsigned int extraThing06 = extractUintFromFile(ccgdCelFile);
+
+	// Debug
+	cout << "ccgdCelFile.tellg(): 0x" << hex << ccgdCelFile.tellg() << endl;
+
+	wstring extraName01;
+	extractWstringFromFile(ccgdCelFile, extraName01);
+	string extraValue01;
+	extractStringFromFile(ccgdCelFile, extraValue01);
+	wstring extraType01;
+	extractWstringFromFile(ccgdCelFile, extraType01);
+	wstring extraName02;
+	extractWstringFromFile(ccgdCelFile, extraName02);
+	string extraValue02;
+	extractStringFromFile(ccgdCelFile, extraValue02);
+	wstring extraType02;
+	extractWstringFromFile(ccgdCelFile, extraType02);
+	unsigned int extraThing07 = extractUintFromFile(ccgdCelFile);
+
+	// Debug
+	cout << "ccgdCelFile.tellg(): 0x" << hex << ccgdCelFile.tellg() << endl;
+
+	//ccgdCelFile.seekg(15807);
+
+
+	// Extract data groups
+	for (int i = 0; i < numberOfDataGroups; i++) {
+		unsigned int nextDataGroupPos;
+		unsigned int dataSetStartPos;
+		int numberOfDataSets;
+		wstring dataGroupName;
+
+		nextDataGroupPos = extractUintFromFile(ccgdCelFile);
+		dataSetStartPos = extractUintFromFile(ccgdCelFile);
+		numberOfDataSets = extractIntFromFile(ccgdCelFile);
+		extractWstringFromFile(ccgdCelFile, dataGroupName);
+
+		// Extract data sets in the current group
+		for (int j = 0; j < numberOfDataSets; j++) {
+			wstring dataSetName;
+
+			unsigned int firstDataElementPos = extractUintFromFile(ccgdCelFile);
+			unsigned int nextDataSetPos = extractUintFromFile(ccgdCelFile);
+			extractWstringFromFile(ccgdCelFile, dataSetName);
+
+			vector<DataHeaderParameter> dataSetParamVector;
+			extractNameTypeValueTrips(ccgdCelFile, dataSetParamVector);
+
+			// TODO: Extract # of columns (Item 6 in Data Set section)
+		}
 	}
 	//cin.get();
 
