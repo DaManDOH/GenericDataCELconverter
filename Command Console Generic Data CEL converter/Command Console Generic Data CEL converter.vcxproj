@@ -144,8 +144,10 @@
   <ItemGroup>
     <ClCompile Include="Command_Console_Generic_Data_CEL_converter.cpp" />
     <ClCompile Include="DataHeaderParameter.cpp" />
+    <ClCompile Include="ColumnMetadata.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ColumnMetadata.h" />
     <ClInclude Include="DataHeaderParameter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

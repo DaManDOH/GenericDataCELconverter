@@ -21,9 +21,15 @@
     <ClCompile Include="DataHeaderParameter.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="ColumnMetadata.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataHeaderParameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColumnMetadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

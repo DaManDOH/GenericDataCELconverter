@@ -12,6 +12,7 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 #include <string>
 #include <vector>
 
+#include "ColumnMetadata.h"
 #include "DataHeaderParameter.h"
 
 using namespace std;
@@ -98,7 +99,7 @@ bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & start
 bool extractOneTriple (ifstream & sourceFile, DataHeaderParameter & oneParameter) {
 	string dummyString;
 	wstring dummyWstring;
-	
+
 	extractWstringFromFile(sourceFile, dummyWstring);
 	oneParameter.setParamName(dummyWstring);
 	extractStringFromFile(sourceFile, dummyString);
@@ -127,6 +128,7 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 	string fileGUID;
 	wstring timeOfCreation;
 	wstring fileLocale;
+	int parentHeaderCount;
 
 	extractStringFromFile(sourceFile, dataTypeID);
 	extractStringFromFile(sourceFile, fileGUID);
@@ -134,7 +136,70 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 	extractWstringFromFile(sourceFile, fileLocale);
 	extractNameTypeValueTrips(sourceFile, vectorToStoreParameters);
 
+	// Extract and ignore parent Generic Data Headers
+	bool recursiveCheck = true;
+	vector<DataHeaderParameter> parentParamVector;
+	parentHeaderCount = extractIntFromFile(sourceFile);
+	for (int i = 0; i < parentHeaderCount; i++) {
+		recursiveCheck &= extractGenericDataHeader(sourceFile, parentParamVector);
+	}
+
+	return recursiveCheck;
+}
+
+bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
+	wstring dummyWstring;
+
+	extractWstringFromFile(sourceFile, dummyWstring);
+	oneColumn.setColumnMetaName(dummyWstring);
+	oneColumn.setColumnMetaType((ColumnMetatypeEnumType)sourceFile.get());
+	oneColumn.setColumnMetaTypeSize(extractIntFromFile(sourceFile));
+
 	return true;
+}
+
+bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta) {
+	unsigned int dataSetColumnCount = extractUintFromFile(sourceFile);
+	for (unsigned int i = 0; i < dataSetColumnCount; i++) {
+		ColumnMetadata newColumnMeta;
+		extractOneColumnMeta(sourceFile, newColumnMeta);
+		vectorToStoreColumnMeta.push_back(newColumnMeta);
+	}
+	return true;
+}
+
+//TODO: Better storage scheme. Strings are detecting their size as zero on all \0s.
+bool extractOneRow(ifstream & sourceFile, string & oneRow, int byteCount) {
+	char * rawBuff = new char[byteCount];
+	sourceFile.get(rawBuff, byteCount);
+
+	oneRow.resize(byteCount);
+	oneRow = rawBuff;
+
+	delete rawBuff;
+	return true;
+}
+
+unsigned int extractDataRows(ifstream & sourceFile, const vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<string> & vectorToStoreRows) {
+	int sumOfColumnSizes = 0;
+	vector<ColumnMetadata>::const_iterator oneCM = vectorToStoreColumnMeta.begin();
+	for (; oneCM < vectorToStoreColumnMeta.end(); oneCM++) {
+		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
+	}
+
+	unsigned int dataSetRowCount = extractUintFromFile(sourceFile);
+	for (unsigned int i = 0; i < dataSetRowCount; i++) {
+		string newRow;
+		extractOneRow(sourceFile, newRow, sumOfColumnSizes);
+		vectorToStoreRows.push_back(newRow);
+	}
+	return dataSetRowCount;
+}
+
+unsigned int extractData(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<string> & vectorToStoreRows) {
+	extractDataSetMeta(sourceFile, vectorToStoreColumnMeta);
+	unsigned int dataSetRowCount = extractDataRows(sourceFile, vectorToStoreColumnMeta, vectorToStoreRows);
+	return dataSetRowCount;
 }
 
 int main( int argc, char * argv[] ) {
@@ -145,7 +210,7 @@ int main( int argc, char * argv[] ) {
 		return -1;
 	}
 
-	int numberOfDataGroups, parentHeaderCount;
+	int numberOfDataGroups;
 	unsigned int dataGroupStartPos;
 
 	string filename = argv[1]; // A little buffer overflow protection.
@@ -156,55 +221,9 @@ int main( int argc, char * argv[] ) {
 	}
 
 	vector<DataHeaderParameter> headerParamVector;
-
 	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
 		return -3;
 	}
-
-	// Debug
-	cout << "ccgdCelFile.tellg(): " << ccgdCelFile.tellg() << endl;
-
-	// Extract and ignore parent Generic Data Headers
-	vector<DataHeaderParameter> parentParamVector; // Debug
-	parentHeaderCount = extractIntFromFile(ccgdCelFile);
-	for (int i = 0; i < parentHeaderCount; i++) {
-		// Debug: vector<DataHeaderParameter> parentParamVector;
-		extractGenericDataHeader(ccgdCelFile, parentParamVector);
-	}
-
-
-	// TODO: Fix sync problem. Temp offset correction.
-	unsigned int extraThing01 = extractUintFromFile(ccgdCelFile);
-	string extraThing02;
-	extractStringFromFile(ccgdCelFile, extraThing02);
-	unsigned int extraThing03 = extractUintFromFile(ccgdCelFile);
-	unsigned int extraThing04 = extractUintFromFile(ccgdCelFile);
-	wstring extraLocale;
-	extractWstringFromFile(ccgdCelFile, extraLocale);
-	unsigned int extraThing06 = extractUintFromFile(ccgdCelFile);
-
-	// Debug
-	cout << "ccgdCelFile.tellg(): 0x" << hex << ccgdCelFile.tellg() << endl;
-
-	wstring extraName01;
-	extractWstringFromFile(ccgdCelFile, extraName01);
-	string extraValue01;
-	extractStringFromFile(ccgdCelFile, extraValue01);
-	wstring extraType01;
-	extractWstringFromFile(ccgdCelFile, extraType01);
-	wstring extraName02;
-	extractWstringFromFile(ccgdCelFile, extraName02);
-	string extraValue02;
-	extractStringFromFile(ccgdCelFile, extraValue02);
-	wstring extraType02;
-	extractWstringFromFile(ccgdCelFile, extraType02);
-	unsigned int extraThing07 = extractUintFromFile(ccgdCelFile);
-
-	// Debug
-	cout << "ccgdCelFile.tellg(): 0x" << hex << ccgdCelFile.tellg() << endl;
-
-	//ccgdCelFile.seekg(15807);
-
 
 	// Extract data groups
 	for (int i = 0; i < numberOfDataGroups; i++) {
@@ -229,10 +248,11 @@ int main( int argc, char * argv[] ) {
 			vector<DataHeaderParameter> dataSetParamVector;
 			extractNameTypeValueTrips(ccgdCelFile, dataSetParamVector);
 
-			// TODO: Extract # of columns (Item 6 in Data Set section)
+			vector<ColumnMetadata> vectorToStoreColumnMeta;
+			vector<string> vectorToStoreRows;
+			unsigned int dataSetRowCount = extractData(ccgdCelFile, vectorToStoreColumnMeta, vectorToStoreRows);
 		}
 	}
-	//cin.get();
 
 	ccgdCelFile.close();
 
