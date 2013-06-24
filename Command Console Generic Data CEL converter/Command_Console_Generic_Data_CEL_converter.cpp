@@ -1,5 +1,5 @@
 /*
-Program to parse Command Console Generic Data .CELL files
+Program to parse Command Console Generic Data .CEL files
 
 Dan C. Wlodarski
 
@@ -65,7 +65,7 @@ bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 	wchar_t oneWchar;
 
 	result.resize(aStringLen);
-	result.clear();
+	//result.clear();
 	for (int i = 0; i < aStringLen; i++) {
 		oneChar = sourceFile.get();
 		oneWchar = (wchar_t)oneChar << 8;
@@ -160,6 +160,7 @@ bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
 
 bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta) {
 	unsigned int dataSetColumnCount = extractUintFromFile(sourceFile);
+	vectorToStoreColumnMeta.reserve(dataSetColumnCount);
 	for (unsigned int i = 0; i < dataSetColumnCount; i++) {
 		ColumnMetadata newColumnMeta;
 		extractOneColumnMeta(sourceFile, newColumnMeta);
@@ -168,37 +169,33 @@ bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorTo
 	return true;
 }
 
-//TODO: Better storage scheme. Strings are detecting their size as zero on all \0s.
-bool extractOneRow(ifstream & sourceFile, string & oneRow, int byteCount) {
-	char * rawBuff = new char[byteCount];
-	sourceFile.get(rawBuff, byteCount);
+unsigned int extractDataSet(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<vector<unsigned char>> & vectorToStoreRows) {
+	extractDataSetMeta(sourceFile, vectorToStoreColumnMeta);
 
-	oneRow.resize(byteCount);
-	oneRow = rawBuff;
-
-	delete rawBuff;
-	return true;
-}
-
-unsigned int extractDataRows(ifstream & sourceFile, const vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<string> & vectorToStoreRows) {
-	int sumOfColumnSizes = 0;
+	// Calculate the width of the rows' data.
+	int sumOfColumnSizes = 0; // Represents the total bytewidth of the fixed-width rows.
 	vector<ColumnMetadata>::const_iterator oneCM = vectorToStoreColumnMeta.begin();
 	for (; oneCM < vectorToStoreColumnMeta.end(); oneCM++) {
 		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
 	}
 
+	
 	unsigned int dataSetRowCount = extractUintFromFile(sourceFile);
-	for (unsigned int i = 0; i < dataSetRowCount; i++) {
-		string newRow;
-		extractOneRow(sourceFile, newRow, sumOfColumnSizes);
-		vectorToStoreRows.push_back(newRow);
-	}
-	return dataSetRowCount;
-}
+	cout << "\t\tNumber of rows: " << dataSetRowCount << "\n";
+	unsigned int twentieth = dataSetRowCount/20;
 
-unsigned int extractData(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<string> & vectorToStoreRows) {
-	extractDataSetMeta(sourceFile, vectorToStoreColumnMeta);
-	unsigned int dataSetRowCount = extractDataRows(sourceFile, vectorToStoreColumnMeta, vectorToStoreRows);
+	// Extract the data set's rows.
+	vectorToStoreRows.reserve(dataSetRowCount);
+	for (unsigned int i = 0; i < dataSetRowCount; i++) {
+		vector<unsigned char> newRow;
+		newRow.reserve(sumOfColumnSizes+1);
+		sourceFile.get((char*)newRow.data(), sumOfColumnSizes);
+		vectorToStoreRows.push_back(newRow);
+		if ((i+1)%twentieth == 0) {
+			cout << "\t\t\t" << (int)(i/(double)dataSetRowCount*100) << "%\n";
+		}
+	}
+
 	return dataSetRowCount;
 }
 
@@ -225,7 +222,10 @@ int main( int argc, char * argv[] ) {
 		return -3;
 	}
 
+	cout << "Number of data groups: " << numberOfDataGroups << "\n";
 	// Extract data groups
+	vector<vector<vector<vector<unsigned char>>>> allGroups;
+	allGroups.reserve(numberOfDataGroups);
 	for (int i = 0; i < numberOfDataGroups; i++) {
 		unsigned int nextDataGroupPos;
 		unsigned int dataSetStartPos;
@@ -237,7 +237,12 @@ int main( int argc, char * argv[] ) {
 		numberOfDataSets = extractIntFromFile(ccgdCelFile);
 		extractWstringFromFile(ccgdCelFile, dataGroupName);
 
+		cout << "Data group #" << i+1 << ": " << "" << "\n";
+
+		cout << "\tNumber of data sets in group #" << i+1 << ": " << numberOfDataSets << "\n";
 		// Extract data sets in the current group
+		vector<vector<vector<unsigned char>>> allSets;
+		allSets.reserve(numberOfDataSets);
 		for (int j = 0; j < numberOfDataSets; j++) {
 			wstring dataSetName;
 
@@ -245,13 +250,17 @@ int main( int argc, char * argv[] ) {
 			unsigned int nextDataSetPos = extractUintFromFile(ccgdCelFile);
 			extractWstringFromFile(ccgdCelFile, dataSetName);
 
+			cout << "\tData set #" << j+1 << " in group #" << i+1 << ": " << "" << "\n";
+
 			vector<DataHeaderParameter> dataSetParamVector;
 			extractNameTypeValueTrips(ccgdCelFile, dataSetParamVector);
 
-			vector<ColumnMetadata> vectorToStoreColumnMeta;
-			vector<string> vectorToStoreRows;
-			unsigned int dataSetRowCount = extractData(ccgdCelFile, vectorToStoreColumnMeta, vectorToStoreRows);
+			vector<ColumnMetadata> allColumnsMetadata;
+			vector<vector<unsigned char>> rowVector;
+			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, allColumnsMetadata, rowVector);
+			allSets.push_back(rowVector);
 		}
+		allGroups.push_back(allSets);
 	}
 
 	ccgdCelFile.close();
