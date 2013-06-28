@@ -47,10 +47,16 @@ unsigned int extractUintFromFile(ifstream & sourceFile) {
 
 bool extractStringFromFile(ifstream & sourceFile, string & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
-	char oneChar;
+	result.reserve(aStringLen+1);
 
-	result.resize(aStringLen);
-	result.clear();
+	/*
+	char *buffer = new char[aStringLen+1];
+	sourceFile.get(buffer, aStringLen + 1);
+	result.assign(buffer, aStringLen);
+	delete [] buffer;
+	*/
+
+	char oneChar;
 	for (int i = 0; i < aStringLen; i++) {
 		oneChar = sourceFile.get();
 		result.append(1, oneChar);
@@ -64,7 +70,7 @@ bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 	char oneChar;
 	wchar_t oneWchar;
 
-	result.resize(aStringLen);
+	result.resize(aStringLen+1);
 	//result.clear();
 	for (int i = 0; i < aStringLen; i++) {
 		oneChar = sourceFile.get();
@@ -96,7 +102,7 @@ bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & start
 	return true;
 }
 
-bool extractOneTriple (ifstream & sourceFile, DataHeaderParameter & oneParameter) {
+bool extractOneHeaderTriple (ifstream & sourceFile, DataHeaderParameter & oneParameter) {
 	string dummyString;
 	wstring dummyWstring;
 
@@ -116,7 +122,7 @@ bool extractNameTypeValueTrips(ifstream & sourceFile, vector<DataHeaderParameter
 	vectorToStoreParameters.reserve(paramCount);
 	for (int i = 0; i < paramCount; i++) {
 		DataHeaderParameter newDHP;
-		extractOneTriple(sourceFile, newDHP);
+		extractOneHeaderTriple(sourceFile, newDHP);
 		vectorToStoreParameters.push_back(newDHP);
 	}
 
@@ -140,6 +146,7 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 	bool recursiveCheck = true;
 	vector<DataHeaderParameter> parentParamVector;
 	parentHeaderCount = extractIntFromFile(sourceFile);
+	parentParamVector.reserve(parentHeaderCount);
 	for (int i = 0; i < parentHeaderCount; i++) {
 		recursiveCheck &= extractGenericDataHeader(sourceFile, parentParamVector);
 	}
@@ -258,9 +265,9 @@ int main( int argc, char * argv[] ) {
 			vector<ColumnMetadata> allColumnsMetadata;
 			vector<vector<unsigned char>> rowVector;
 			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, allColumnsMetadata, rowVector);
-			allSets.push_back(rowVector);
+			//allSets.push_back(rowVector);
 		}
-		allGroups.push_back(allSets);
+		//allGroups.push_back(allSets);
 	}
 
 	ccgdCelFile.close();
