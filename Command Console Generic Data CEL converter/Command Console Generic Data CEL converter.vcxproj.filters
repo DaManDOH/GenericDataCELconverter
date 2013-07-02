@@ -32,5 +32,11 @@
     <ClInclude Include="ColumnMetadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AffymetrixDataGroup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AffymetrixDataSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

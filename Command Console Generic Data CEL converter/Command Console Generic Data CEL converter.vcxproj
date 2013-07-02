@@ -147,8 +147,10 @@
     <ClCompile Include="ColumnMetadata.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AffymetrixDataGroup.h" />
     <ClInclude Include="ColumnMetadata.h" />
     <ClInclude Include="DataHeaderParameter.h" />
+    <ClInclude Include="AffymetrixDataSet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

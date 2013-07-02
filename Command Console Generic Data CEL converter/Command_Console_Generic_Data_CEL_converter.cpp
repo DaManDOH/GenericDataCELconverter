@@ -14,71 +14,68 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 
 #include "ColumnMetadata.h"
 #include "DataHeaderParameter.h"
+#include "AffymetrixDataGroup.h"
+#include "AffymetrixDataSet.h"
 
 using namespace std;
 
 int extractIntFromFile(ifstream & sourceFile) {
-	unsigned char dummy1, dummy2;
-	unsigned char dummy3, dummy4;
+	unsigned char dummy[4];
 	int retval;
 
-	dummy1 = sourceFile.get();
-	dummy2 = sourceFile.get();
-	dummy3 = sourceFile.get();
-	dummy4 = sourceFile.get();
-	retval = ((int)dummy1 << 24) + ((int)dummy2 << 16) + ((int)dummy3 << 8) + (int)dummy4;
+	sourceFile.read((char*)dummy, 4);
+	retval = ((int)dummy[0] << 24);
+	retval += ((int)dummy[1] << 16);
+	retval += ((int)dummy[2] << 8);
+	retval += (int)dummy[3];
 
 	return retval;
 }
 
 unsigned int extractUintFromFile(ifstream & sourceFile) {
-	unsigned char dummy1, dummy2;
-	unsigned char dummy3, dummy4;
+	unsigned char dummy[4];
 	unsigned int retval;
 
-	dummy1 = sourceFile.get();
-	dummy2 = sourceFile.get();
-	dummy3 = sourceFile.get();
-	dummy4 = sourceFile.get();
-	retval = ((unsigned int)dummy1 << 24) + ((unsigned int)dummy2 << 16) + ((unsigned int)dummy3 << 8) + (unsigned int)dummy4;
+	sourceFile.read((char*)dummy, 4);
+	retval = ((unsigned int)dummy[0] << 24);
+	retval += ((unsigned int)dummy[1] << 16);
+	retval += ((unsigned int)dummy[2] << 8);
+	retval += (unsigned int)dummy[3];
 
 	return retval;
 }
 
 bool extractStringFromFile(ifstream & sourceFile, string & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
+	char * buff = new char[aStringLen];
+
+	sourceFile.read(buff, aStringLen);
+	result.clear();
 	result.reserve(aStringLen+1);
-
-	/*
-	char *buffer = new char[aStringLen+1];
-	sourceFile.get(buffer, aStringLen + 1);
-	result.assign(buffer, aStringLen);
-	delete [] buffer;
-	*/
-
-	char oneChar;
-	for (int i = 0; i < aStringLen; i++) {
-		oneChar = sourceFile.get();
-		result.append(1, oneChar);
-	}
+	result.assign(buff, aStringLen);
+	delete [] buff;
 
 	return true;
 }
 
 bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
-	char oneChar;
-	wchar_t oneWchar;
+	unsigned char * buff = new unsigned char[2*aStringLen];
+	char16_t oneWchar;
+	
+	sourceFile.read((char*)buff, 2*aStringLen);
+	result.clear();
+	result.reserve(aStringLen+1);
 
-	result.resize(aStringLen+1);
-	//result.clear();
+	// .CEL files' "Unicode" wide-strings do not actually conform to
+	// the Unicode standard. Each wide-byte is big-endian instead
+	// of the required little-endian.
 	for (int i = 0; i < aStringLen; i++) {
-		oneChar = sourceFile.get();
-		oneWchar = (wchar_t)oneChar << 8;
-		oneChar = sourceFile.get();
-		oneWchar += (wchar_t)oneChar;
+		oneWchar = buff[i*2] << 8;
+		oneWchar += buff[(i+1)*2-1];
 		result.append(1, oneWchar);
 	}
+	delete [] buff;
 
 	return true;
 }
@@ -86,12 +83,12 @@ bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & startPos) {
 	unsigned char magicNum, versionNum;
 
-	magicNum = sourceFile.get();
+	sourceFile.read((char*)&magicNum, 1);
 	if ( (int)magicNum != 59 ) {
 		return false;
 	}
 
-	versionNum = sourceFile.get();
+	sourceFile.read((char*)&versionNum, 1);
 	if ((int)versionNum != 1) {
 		return false;
 	}
@@ -156,10 +153,12 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 
 bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
 	wstring dummyWstring;
+	unsigned char oneChar;
 
 	extractWstringFromFile(sourceFile, dummyWstring);
 	oneColumn.setColumnMetaName(dummyWstring);
-	oneColumn.setColumnMetaType((ColumnMetatypeEnumType)sourceFile.get());
+	sourceFile.read((char*)&oneChar, 1);
+	oneColumn.setColumnMetaType((ColumnMetatypeEnumType)oneChar);
 	oneColumn.setColumnMetaTypeSize(extractIntFromFile(sourceFile));
 
 	return true;
@@ -176,34 +175,41 @@ bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorTo
 	return true;
 }
 
-unsigned int extractDataSet(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta, vector<vector<unsigned char>> & vectorToStoreRows) {
-	extractDataSetMeta(sourceFile, vectorToStoreColumnMeta);
+unsigned int extractDataSet(ifstream & sourceFile, DataSet & oneDataSet) {
+	extractDataSetMeta(sourceFile, oneDataSet.allColumnsMetadata);
 
 	// Calculate the width of the rows' data.
 	int sumOfColumnSizes = 0; // Represents the total bytewidth of the fixed-width rows.
-	vector<ColumnMetadata>::const_iterator oneCM = vectorToStoreColumnMeta.begin();
-	for (; oneCM < vectorToStoreColumnMeta.end(); oneCM++) {
+	vector<ColumnMetadata>::const_iterator oneCM = oneDataSet.allColumnsMetadata.begin();
+	vector<ColumnMetadata>::const_iterator metaDataEnd = oneDataSet.allColumnsMetadata.end();
+	for (; oneCM < metaDataEnd; oneCM++) {
 		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
 	}
-
 	
-	unsigned int dataSetRowCount = extractUintFromFile(sourceFile);
-	cout << "\t\tNumber of rows: " << dataSetRowCount << "\n";
-	unsigned int twentieth = dataSetRowCount/20;
+	oneDataSet.rowCount = extractUintFromFile(sourceFile);
+	cout << "\t\tNumber of rows: " << oneDataSet.rowCount << "\n";
 
-	// Extract the data set's rows.
-	vectorToStoreRows.reserve(dataSetRowCount);
-	for (unsigned int i = 0; i < dataSetRowCount; i++) {
-		vector<unsigned char> newRow;
-		newRow.reserve(sumOfColumnSizes+1);
-		sourceFile.get((char*)newRow.data(), sumOfColumnSizes);
-		vectorToStoreRows.push_back(newRow);
-		if ((i+1)%twentieth == 0) {
-			cout << "\t\t\t" << (int)(i/(double)dataSetRowCount*100) << "%\n";
-		}
-	}
+	// Extract the data set's rows. The DataSet class' buffer is
+	// one-dimensional, so the reserve size should be the row
+	// count by the sum of the column widths.
+	unsigned int byteCount = oneDataSet.rowCount*sumOfColumnSizes;
+	oneDataSet.flattenedDataRows.reserve(byteCount);
+	
+	// TODO: Figure out how to use more OOP allocation
+	//istream_iterator<unsigned char> dataStart(sourceFile);
 
-	return dataSetRowCount;
+	unsigned char * buff = new unsigned char[byteCount];
+	sourceFile.read((char*)buff, byteCount);
+	oneDataSet.flattenedDataRows.assign(&buff[0], &buff[byteCount-1]);
+	delete [] buff;
+
+	// TODO: Figure out what this extra byte is for.
+	buff = new unsigned char;
+	sourceFile.read((char*)buff, 1);
+	cout << "\n!!\"Spare\" byte: " << *(buff) << "\n\n";
+	delete buff;
+
+	return oneDataSet.rowCount;
 }
 
 int main( int argc, char * argv[] ) {
@@ -231,40 +237,38 @@ int main( int argc, char * argv[] ) {
 
 	cout << "Number of data groups: " << numberOfDataGroups << "\n";
 	// Extract data groups
-	vector<vector<vector<vector<unsigned char>>>> allGroups;
+	vector<DataGroup> allGroups;
 	allGroups.reserve(numberOfDataGroups);
 	for (int i = 0; i < numberOfDataGroups; i++) {
-		unsigned int nextDataGroupPos;
-		unsigned int dataSetStartPos;
-		int numberOfDataSets;
-		wstring dataGroupName;
+		DataGroup oneGroup;
 
-		nextDataGroupPos = extractUintFromFile(ccgdCelFile);
-		dataSetStartPos = extractUintFromFile(ccgdCelFile);
-		numberOfDataSets = extractIntFromFile(ccgdCelFile);
-		extractWstringFromFile(ccgdCelFile, dataGroupName);
+		oneGroup.nextDataGroupPos = extractUintFromFile(ccgdCelFile);
+		oneGroup.dataSetStartPos = extractUintFromFile(ccgdCelFile);
+		oneGroup.numberOfDataSets = extractIntFromFile(ccgdCelFile);
+		extractWstringFromFile(ccgdCelFile, oneGroup.dataGroupName);
 
-		cout << "Data group #" << i+1 << ": " << "" << "\n";
+		cout << "Data group #" << i+1 << ": ";
+		wcout << oneGroup.dataGroupName;
+		cout << "\n";
 
-		cout << "\tNumber of data sets in group #" << i+1 << ": " << numberOfDataSets << "\n";
+		cout << "\tNumber of data sets in group #" << i+1 << ": " << oneGroup.numberOfDataSets << "\n";
 		// Extract data sets in the current group
-		vector<vector<vector<unsigned char>>> allSets;
-		allSets.reserve(numberOfDataSets);
-		for (int j = 0; j < numberOfDataSets; j++) {
-			wstring dataSetName;
+		oneGroup.dataGroupDataSets.reserve(oneGroup.numberOfDataSets);
+		for (int j = 0; j < oneGroup.numberOfDataSets; j++) {
+			DataSet oneSet;
 
-			unsigned int firstDataElementPos = extractUintFromFile(ccgdCelFile);
-			unsigned int nextDataSetPos = extractUintFromFile(ccgdCelFile);
-			extractWstringFromFile(ccgdCelFile, dataSetName);
+			oneSet.firstDataElementPos = extractUintFromFile(ccgdCelFile);
+			oneSet.nextDataSetPos = extractUintFromFile(ccgdCelFile);
+			extractWstringFromFile(ccgdCelFile, oneSet.name);
 
-			cout << "\tData set #" << j+1 << " in group #" << i+1 << ": " << "" << "\n";
+			cout << "\tData set #" << j+1 << " in group #" << i+1 << ": ";
+			wcout << oneSet.name;
+			cout << "\n";
 
-			vector<DataHeaderParameter> dataSetParamVector;
-			extractNameTypeValueTrips(ccgdCelFile, dataSetParamVector);
+			extractNameTypeValueTrips(ccgdCelFile, oneSet.params);
 
-			vector<ColumnMetadata> allColumnsMetadata;
-			vector<vector<unsigned char>> rowVector;
-			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, allColumnsMetadata, rowVector);
+			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, oneSet);
+			cout << "current file position: " << ccgdCelFile.tellg() << "\n";
 			//allSets.push_back(rowVector);
 		}
 		//allGroups.push_back(allSets);
