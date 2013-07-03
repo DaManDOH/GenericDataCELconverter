@@ -140,15 +140,15 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 	extractNameTypeValueTrips(sourceFile, vectorToStoreParameters);
 
 	// Extract and ignore parent Generic Data Headers
-	bool recursiveCheck = true;
+	bool parentRecordsExtracted = true;
 	vector<DataHeaderParameter> parentParamVector;
 	parentHeaderCount = extractIntFromFile(sourceFile);
 	parentParamVector.reserve(parentHeaderCount);
 	for (int i = 0; i < parentHeaderCount; i++) {
-		recursiveCheck &= extractGenericDataHeader(sourceFile, parentParamVector);
+		parentRecordsExtracted &= extractGenericDataHeader(sourceFile, parentParamVector);
 	}
 
-	return recursiveCheck;
+	return parentRecordsExtracted;
 }
 
 bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
@@ -197,16 +197,18 @@ unsigned int extractDataSet(ifstream & sourceFile, DataSet & oneDataSet) {
 	
 	// TODO: Figure out how to use more OOP allocation
 	//istream_iterator<unsigned char> dataStart(sourceFile);
-
-	unsigned char * buff = new unsigned char[byteCount];
-	sourceFile.read((char*)buff, byteCount);
-	oneDataSet.flattenedDataRows.assign(&buff[0], &buff[byteCount-1]);
-	delete [] buff;
+	unsigned char * buff;
+	if (byteCount > 0) {
+		buff = new unsigned char[byteCount];
+		sourceFile.read((char*)buff, byteCount);
+		oneDataSet.flattenedDataRows.assign(&buff[0], &buff[byteCount-1]);
+		delete [] buff;
+	}
 
 	// TODO: Figure out what this extra byte is for.
 	buff = new unsigned char;
 	sourceFile.read((char*)buff, 1);
-	cout << "\n!!\"Spare\" byte: " << *(buff) << "\n\n";
+	cout << "\n!!\"Spare\" byte: " << hex << (int)*(buff) << "\n\n";
 	delete buff;
 
 	return oneDataSet.rowCount;
@@ -247,7 +249,7 @@ int main( int argc, char * argv[] ) {
 		oneGroup.numberOfDataSets = extractIntFromFile(ccgdCelFile);
 		extractWstringFromFile(ccgdCelFile, oneGroup.dataGroupName);
 
-		cout << "Data group #" << i+1 << ": ";
+		cout << "Data group #" << dec << i+1 << ": ";
 		wcout << oneGroup.dataGroupName;
 		cout << "\n";
 
@@ -261,14 +263,14 @@ int main( int argc, char * argv[] ) {
 			oneSet.nextDataSetPos = extractUintFromFile(ccgdCelFile);
 			extractWstringFromFile(ccgdCelFile, oneSet.name);
 
-			cout << "\tData set #" << j+1 << " in group #" << i+1 << ": ";
+			cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
 			wcout << oneSet.name;
 			cout << "\n";
 
 			extractNameTypeValueTrips(ccgdCelFile, oneSet.params);
 
 			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, oneSet);
-			cout << "current file position: " << ccgdCelFile.tellg() << "\n";
+			cout << "current file position: " << dec << ccgdCelFile.tellg() << "\n\n";
 			//allSets.push_back(rowVector);
 		}
 		//allGroups.push_back(allSets);
