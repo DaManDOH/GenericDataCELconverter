@@ -19,7 +19,7 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 
 using namespace std;
 
-int extractIntFromFile(ifstream & sourceFile) {
+int extractIntFromFile(istream & sourceFile) {
 	unsigned char dummy[4];
 	int retval;
 
@@ -32,7 +32,7 @@ int extractIntFromFile(ifstream & sourceFile) {
 	return retval;
 }
 
-unsigned int extractUintFromFile(ifstream & sourceFile) {
+unsigned int extractUintFromFile(istream & sourceFile) {
 	unsigned char dummy[4];
 	unsigned int retval;
 
@@ -45,7 +45,7 @@ unsigned int extractUintFromFile(ifstream & sourceFile) {
 	return retval;
 }
 
-bool extractStringFromFile(ifstream & sourceFile, string & result) {
+bool extractStringFromFile(istream & sourceFile, string & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
 	char * buff = new char[aStringLen];
 
@@ -58,7 +58,7 @@ bool extractStringFromFile(ifstream & sourceFile, string & result) {
 	return true;
 }
 
-bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
+bool extractWstringFromFile(istream & sourceFile, wstring & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
 	unsigned char * buff = new unsigned char[2*aStringLen];
 	char16_t oneWchar;
@@ -80,7 +80,7 @@ bool extractWstringFromFile(ifstream & sourceFile, wstring & result) {
 	return true;
 }
 
-bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & startPos) {
+bool extractFileHeader(istream & sourceFile, int & groups, unsigned int & startPos) {
 	unsigned char magicNum, versionNum;
 
 	sourceFile.read((char*)&magicNum, 1);
@@ -99,7 +99,7 @@ bool extractFileHeader(ifstream & sourceFile, int & groups, unsigned int & start
 	return true;
 }
 
-bool extractOneHeaderTriple (ifstream & sourceFile, DataHeaderParameter & oneParameter) {
+bool extractOneHeaderTriple (istream & sourceFile, DataHeaderParameter & oneParameter) {
 	string dummyString;
 	wstring dummyWstring;
 
@@ -113,7 +113,7 @@ bool extractOneHeaderTriple (ifstream & sourceFile, DataHeaderParameter & onePar
 	return true;
 }
 
-bool extractNameTypeValueTrips(ifstream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
+bool extractNameTypeValueTrips(istream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
 	int paramCount = extractIntFromFile(sourceFile);
 
 	vectorToStoreParameters.reserve(paramCount);
@@ -126,7 +126,7 @@ bool extractNameTypeValueTrips(ifstream & sourceFile, vector<DataHeaderParameter
 	return true;
 }
 
-bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
+bool extractGenericDataHeader(istream & sourceFile, vector<DataHeaderParameter> & vectorToStoreParameters) {
 	string dataTypeID;
 	string fileGUID;
 	wstring timeOfCreation;
@@ -151,7 +151,7 @@ bool extractGenericDataHeader(ifstream & sourceFile, vector<DataHeaderParameter>
 	return parentRecordsExtracted;
 }
 
-bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
+bool extractOneColumnMeta(istream & sourceFile, ColumnMetadata & oneColumn) {
 	wstring dummyWstring;
 	unsigned char oneChar;
 
@@ -164,7 +164,7 @@ bool extractOneColumnMeta(ifstream & sourceFile, ColumnMetadata & oneColumn) {
 	return true;
 }
 
-bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta) {
+bool extractDataSetMeta(istream & sourceFile, vector<ColumnMetadata> & vectorToStoreColumnMeta) {
 	unsigned int dataSetColumnCount = extractUintFromFile(sourceFile);
 	vectorToStoreColumnMeta.reserve(dataSetColumnCount);
 	for (unsigned int i = 0; i < dataSetColumnCount; i++) {
@@ -175,7 +175,7 @@ bool extractDataSetMeta(ifstream & sourceFile, vector<ColumnMetadata> & vectorTo
 	return true;
 }
 
-unsigned int extractDataSet(ifstream & sourceFile, DataSet & oneDataSet) {
+unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
 	extractDataSetMeta(sourceFile, oneDataSet.allColumnsMetadata);
 
 	// Calculate the width of the rows' data.
@@ -205,11 +205,12 @@ unsigned int extractDataSet(ifstream & sourceFile, DataSet & oneDataSet) {
 		delete [] buff;
 	}
 
-	// TODO: Figure out what this extra byte is for.
-	buff = new unsigned char;
-	sourceFile.read((char*)buff, 1);
-	cout << "\n!!\"Spare\" byte: " << hex << (int)*(buff) << "\n\n";
-	delete buff;
+	// TODO: Figure out why the bytewidth are SOMETIMES out-of-sync.
+	unsigned int currentPos = (unsigned int)sourceFile.tellg();
+	if (currentPos != oneDataSet.nextDataSetPos) {
+		cerr << dec << "\t\t!! " << oneDataSet.nextDataSetPos - currentPos << "-byte correction!!\n";
+		sourceFile.seekg(oneDataSet.nextDataSetPos);
+	}
 
 	return oneDataSet.rowCount;
 }
@@ -217,8 +218,7 @@ unsigned int extractDataSet(ifstream & sourceFile, DataSet & oneDataSet) {
 int main( int argc, char * argv[] ) {
 
 	if (argc < 2) {
-		cerr << "Need an intensity file.\nAny key to exit." << endl;
-		cin.get();
+		cerr << "Need an intensity file.\n" << endl;
 		return -1;
 	}
 
@@ -229,11 +229,13 @@ int main( int argc, char * argv[] ) {
 	ifstream ccgdCelFile(filename.c_str(), ios::binary);
 
 	if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
+		cerr << "Bad file header.\n" << endl;
 		return -2;
 	}
 
 	vector<DataHeaderParameter> headerParamVector;
 	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
+		cerr << "Bad data header.\n" << endl;
 		return -3;
 	}
 
@@ -270,7 +272,6 @@ int main( int argc, char * argv[] ) {
 			extractNameTypeValueTrips(ccgdCelFile, oneSet.params);
 
 			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, oneSet);
-			cout << "current file position: " << dec << ccgdCelFile.tellg() << "\n\n";
 			//allSets.push_back(rowVector);
 		}
 		//allGroups.push_back(allSets);
