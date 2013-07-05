@@ -21,3 +21,4 @@ private:
 };
 
 #endif /* __GENERIC_CEL_FILE_DATA_HEADER_PARAMETER_TRIPS__ */
+

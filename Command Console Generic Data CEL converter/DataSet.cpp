@@ -51,3 +51,4 @@ std::vector<ColumnMetadata> & DataSet::setColumnsMetadata() {
 std::vector<unsigned char> & DataSet::setFlattenedDataRows() {
 	return data;
 }
+

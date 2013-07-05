@@ -35,3 +35,4 @@ std::wstring & DataGroup::setDataGroupName() {
 std::vector<DataSet> & DataGroup::setDataSets() {
 	return dataSets;
 }
+

@@ -23,3 +23,4 @@ void DataHeaderParameter::setParamValue(const std::string & newValue) {
 void DataHeaderParameter::setParamType(const std::wstring & newType) {
 	_type = newType;
 }
+

@@ -23,3 +23,4 @@ void ColumnMetadata::setColumnMetaType(ColumnMetatypeEnumType newColType) {
 void ColumnMetadata::setColumnMetaTypeSize(int newColTypeSize) {
 	_typeSize = newColTypeSize;
 }
+

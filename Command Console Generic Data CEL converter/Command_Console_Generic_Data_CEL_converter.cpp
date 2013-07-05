@@ -222,7 +222,7 @@ int main( int argc, char * argv[] ) {
 	if (argc < 2) {
 		cerr << "Need an intensity file.\n" << endl;
 		retval = -1;
-	}
+	} else {
 
 	int numberOfDataGroups;
 	unsigned int dataGroupStartPos;
@@ -240,13 +240,13 @@ int main( int argc, char * argv[] ) {
 	if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
 		cerr << "Bad file header.\n" << endl;
 		retval = -2;
-	}
+	} else {
 
 	vector<DataHeaderParameter> headerParamVector;
 	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
 		cerr << "Bad data header.\n" << endl;
 		retval = -3;
-	}
+	} else {
 
 	cout << "Number of data groups: " << numberOfDataGroups << "\n";
 	// Extract data groups
@@ -264,7 +264,8 @@ int main( int argc, char * argv[] ) {
 		wcout << oneGroup.getDataGroupName();
 		cout << "\n";
 
-		cout << "\tNumber of data sets in group #" << i+1 << ": " << numberOfDataSets << "\n";
+		cout << "\tNumber of data sets in group #";
+        cout << i+1 << ": " << numberOfDataSets << "\n";
 
 		// Extract data sets in the current group
 		oneGroup.setDataSets().reserve(numberOfDataSets);
@@ -281,7 +282,7 @@ int main( int argc, char * argv[] ) {
 
 			extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
 
-			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, oneSet);
+			extractDataSet(ccgdCelFile, oneSet);
 			oneGroup.setDataSets().push_back(oneSet);
 		}
 		allGroups.push_back(oneGroup);
@@ -298,3 +299,7 @@ int main( int argc, char * argv[] ) {
 
 	return retval;
 }
+}
+}
+}
+
