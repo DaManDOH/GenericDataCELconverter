@@ -143,14 +143,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Command_Console_Generic_Data_CEL_converter.cpp" />
+    <ClCompile Include="DataGroup.cpp" />
     <ClCompile Include="DataHeaderParameter.cpp" />
     <ClCompile Include="ColumnMetadata.cpp" />
+    <ClCompile Include="DataSet.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AffymetrixDataGroup.h" />
+    <ClInclude Include="DataGroup.h" />
     <ClInclude Include="ColumnMetadata.h" />
     <ClInclude Include="DataHeaderParameter.h" />
-    <ClInclude Include="AffymetrixDataSet.h" />
+    <ClInclude Include="DataSet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

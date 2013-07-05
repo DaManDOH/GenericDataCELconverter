@@ -1,4 +1,4 @@
-#include "ColumnMetadata.h"
+﻿#include "ColumnMetadata.h"
 
 const std::wstring & ColumnMetadata::getColumnMetaName() const {
 	return _name;

@@ -1,0 +1,29 @@
+﻿#ifndef __GENERIC_CEL_FILE_DATA_GROUP__
+#define __GENERIC_CEL_FILE_DATA_GROUP__
+
+#include <string>
+#include <vector>
+
+#include "DataSet.h"
+
+class DataGroup {
+public:
+	unsigned int getNextDataGroupPos() const;
+	unsigned int getStartPos() const;
+	int getDataSetCount() const;
+	const std::wstring & getDataGroupName() const;
+	const std::vector<DataSet> & getDataSets() const;
+
+	void setNextDataGroupPos(unsigned int);
+	void setStartPos(unsigned int);
+	std::wstring & setDataGroupName();
+	std::vector<DataSet> & setDataSets();
+
+private:
+	unsigned int posNext;
+	unsigned int startPos;
+	std::wstring name;
+	std::vector<DataSet> dataSets;
+};
+
+#endif /* __GENERIC_CEL_FILE_DATA_GROUP__ */

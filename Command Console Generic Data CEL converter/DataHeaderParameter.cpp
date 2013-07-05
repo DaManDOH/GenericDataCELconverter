@@ -1,4 +1,4 @@
-#include "DataHeaderParameter.h"
+﻿#include "DataHeaderParameter.h"
 
 const std::wstring & DataHeaderParameter::getParamName() {
 	return _name;

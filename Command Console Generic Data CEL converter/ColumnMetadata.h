@@ -1,4 +1,4 @@
-#ifndef __GENERIC_CEL_FILE_COLUMN_META_DATA__
+﻿#ifndef __GENERIC_CEL_FILE_COLUMN_META_DATA__
 #define __GENERIC_CEL_FILE_COLUMN_META_DATA__
 
 #include <string>

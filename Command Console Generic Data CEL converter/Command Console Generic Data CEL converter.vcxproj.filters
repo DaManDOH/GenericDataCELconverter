@@ -24,6 +24,12 @@
     <ClCompile Include="ColumnMetadata.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="DataGroup.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DataSet.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataHeaderParameter.h">
@@ -32,10 +38,10 @@
     <ClInclude Include="ColumnMetadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AffymetrixDataGroup.h">
+    <ClInclude Include="DataSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AffymetrixDataSet.h">
+    <ClInclude Include="DataGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-/*
+﻿/*
 Program to parse Command Console Generic Data .CEL files
 
 Dan C. Wlodarski
@@ -8,14 +8,13 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 
 #include <fstream>
 #include <iostream>
+#ifdef __preload__
 #include <sstream>
+#endif /* __preload__ */
 #include <string>
 #include <vector>
 
-#include "ColumnMetadata.h"
-#include "DataHeaderParameter.h"
-#include "AffymetrixDataGroup.h"
-#include "AffymetrixDataSet.h"
+#include "DataGroup.h"
 
 using namespace std;
 
@@ -176,67 +175,77 @@ bool extractDataSetMeta(istream & sourceFile, vector<ColumnMetadata> & vectorToS
 }
 
 unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
-	extractDataSetMeta(sourceFile, oneDataSet.allColumnsMetadata);
+	extractDataSetMeta(sourceFile, oneDataSet.setColumnsMetadata());
 
 	// Calculate the width of the rows' data.
 	int sumOfColumnSizes = 0; // Represents the total bytewidth of the fixed-width rows.
-	vector<ColumnMetadata>::const_iterator oneCM = oneDataSet.allColumnsMetadata.begin();
-	vector<ColumnMetadata>::const_iterator metaDataEnd = oneDataSet.allColumnsMetadata.end();
+	vector<ColumnMetadata>::const_iterator oneCM = oneDataSet.getColumnsMetadata().begin();
+	vector<ColumnMetadata>::const_iterator metaDataEnd = oneDataSet.getColumnsMetadata().end();
 	for (; oneCM < metaDataEnd; oneCM++) {
 		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
 	}
 	
-	oneDataSet.rowCount = extractUintFromFile(sourceFile);
-	cout << "\t\tNumber of rows: " << oneDataSet.rowCount << "\n";
+	unsigned int thisSetRowCount = extractUintFromFile(sourceFile);
+	cout << "\t\tNumber of rows: " << thisSetRowCount << "\n";
 
 	// Extract the data set's rows. The DataSet class' buffer is
 	// one-dimensional, so the reserve size should be the row
 	// count by the sum of the column widths.
-	unsigned int byteCount = oneDataSet.rowCount*sumOfColumnSizes;
-	oneDataSet.flattenedDataRows.reserve(byteCount);
+	unsigned int byteCount = thisSetRowCount*sumOfColumnSizes;
+	oneDataSet.setFlattenedDataRows().reserve(byteCount);
 	
-	// TODO: Figure out how to use more OOP allocation
-	//istream_iterator<unsigned char> dataStart(sourceFile);
+	// TODO: Figure out how to use more OOP allocation.
 	unsigned char * buff;
 	if (byteCount > 0) {
 		buff = new unsigned char[byteCount];
 		sourceFile.read((char*)buff, byteCount);
-		oneDataSet.flattenedDataRows.assign(&buff[0], &buff[byteCount-1]);
+		oneDataSet.setFlattenedDataRows().assign(&buff[0], &buff[byteCount-1]);
 		delete [] buff;
 	}
 
 	// TODO: Figure out why the bytewidth are SOMETIMES out-of-sync.
 	unsigned int currentPos = (unsigned int)sourceFile.tellg();
-	if (currentPos != oneDataSet.nextDataSetPos) {
-		cerr << dec << "\t\t!! " << oneDataSet.nextDataSetPos - currentPos << "-byte correction!!\n";
-		sourceFile.seekg(oneDataSet.nextDataSetPos);
+	unsigned int nextDataSetPos = oneDataSet.getNextDataSetPos();
+	if (currentPos != nextDataSetPos) {
+		cerr << dec << "\t\t!! ";
+		cerr << nextDataSetPos - currentPos;
+		cerr << "-byte correction!!\n";
+		sourceFile.seekg(nextDataSetPos);
 	}
 
-	return oneDataSet.rowCount;
+	return thisSetRowCount;
 }
 
 int main( int argc, char * argv[] ) {
+	int retval = 0;
 
 	if (argc < 2) {
 		cerr << "Need an intensity file.\n" << endl;
-		return -1;
+		retval = -1;
 	}
 
 	int numberOfDataGroups;
 	unsigned int dataGroupStartPos;
-
 	string filename = argv[1]; // A little buffer overflow protection.
+
+#ifdef __preload__
+	ifstream ccgdCelFileSource(filename.c_str(), ios::binary);
+	istringstream ccgdCelFile;
+	ccgdCelFile.set_rdbuf(ccgdCelFileSource.rdbuf());
+	ccgdCelFileSource.close();
+#else
 	ifstream ccgdCelFile(filename.c_str(), ios::binary);
+#endif /* preload */
 
 	if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
 		cerr << "Bad file header.\n" << endl;
-		return -2;
+		retval = -2;
 	}
 
 	vector<DataHeaderParameter> headerParamVector;
 	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
 		cerr << "Bad data header.\n" << endl;
-		return -3;
+		retval = -3;
 	}
 
 	cout << "Number of data groups: " << numberOfDataGroups << "\n";
@@ -246,38 +255,46 @@ int main( int argc, char * argv[] ) {
 	for (int i = 0; i < numberOfDataGroups; i++) {
 		DataGroup oneGroup;
 
-		oneGroup.nextDataGroupPos = extractUintFromFile(ccgdCelFile);
-		oneGroup.dataSetStartPos = extractUintFromFile(ccgdCelFile);
-		oneGroup.numberOfDataSets = extractIntFromFile(ccgdCelFile);
-		extractWstringFromFile(ccgdCelFile, oneGroup.dataGroupName);
+		oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
+		oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
+		int numberOfDataSets = extractIntFromFile(ccgdCelFile);
+		extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
 
 		cout << "Data group #" << dec << i+1 << ": ";
-		wcout << oneGroup.dataGroupName;
+		wcout << oneGroup.getDataGroupName();
 		cout << "\n";
 
-		cout << "\tNumber of data sets in group #" << i+1 << ": " << oneGroup.numberOfDataSets << "\n";
+		cout << "\tNumber of data sets in group #" << i+1 << ": " << numberOfDataSets << "\n";
+
 		// Extract data sets in the current group
-		oneGroup.dataGroupDataSets.reserve(oneGroup.numberOfDataSets);
-		for (int j = 0; j < oneGroup.numberOfDataSets; j++) {
+		oneGroup.setDataSets().reserve(numberOfDataSets);
+		for (int j = 0; j < numberOfDataSets; j++) {
 			DataSet oneSet;
 
-			oneSet.firstDataElementPos = extractUintFromFile(ccgdCelFile);
-			oneSet.nextDataSetPos = extractUintFromFile(ccgdCelFile);
-			extractWstringFromFile(ccgdCelFile, oneSet.name);
+			oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
+			oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
+			extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
 
 			cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
-			wcout << oneSet.name;
+			wcout << oneSet.getDataSetName();
 			cout << "\n";
 
-			extractNameTypeValueTrips(ccgdCelFile, oneSet.params);
+			extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
 
 			unsigned int dataSetRowCount = extractDataSet(ccgdCelFile, oneSet);
-			//allSets.push_back(rowVector);
+			oneGroup.setDataSets().push_back(oneSet);
 		}
-		//allGroups.push_back(allSets);
+		allGroups.push_back(oneGroup);
 	}
 
+#ifndef __preload__
 	ccgdCelFile.close();
+#endif /* undefined __preload__ */
 
-	return 0;
+#ifdef _DEBUG
+	//cout << "\nAny key to continue." << endl;
+	//cin.get();
+#endif
+
+	return retval;
 }
