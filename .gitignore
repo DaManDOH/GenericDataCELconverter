@@ -214,9 +214,3 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-#
-# Custom
-#
-*.exe
-*.o
-*.do
