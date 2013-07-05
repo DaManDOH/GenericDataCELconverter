@@ -8,9 +8,6 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 
 #include <fstream>
 #include <iostream>
-#ifdef __preload__
-#include <sstream>
-#endif /* __preload__ */
 #include <string>
 #include <vector>
 
@@ -61,7 +58,7 @@ bool extractWstringFromFile(istream & sourceFile, wstring & result) {
 	int aStringLen = extractIntFromFile(sourceFile);
 	unsigned char * buff = new unsigned char[2*aStringLen];
 	char16_t oneWchar;
-	
+
 	sourceFile.read((char*)buff, 2*aStringLen);
 	result.clear();
 	result.reserve(aStringLen+1);
@@ -184,7 +181,7 @@ unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
 	for (; oneCM < metaDataEnd; oneCM++) {
 		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
 	}
-	
+
 	unsigned int thisSetRowCount = extractUintFromFile(sourceFile);
 	cout << "\t\tNumber of rows: " << thisSetRowCount << "\n";
 
@@ -193,7 +190,7 @@ unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
 	// count by the sum of the column widths.
 	unsigned int byteCount = thisSetRowCount*sumOfColumnSizes;
 	oneDataSet.setFlattenedDataRows().reserve(byteCount);
-	
+
 	// TODO: Figure out how to use more OOP allocation.
 	unsigned char * buff;
 	if (byteCount > 0) {
@@ -224,82 +221,73 @@ int main( int argc, char * argv[] ) {
 		retval = -1;
 	} else {
 
-	int numberOfDataGroups;
-	unsigned int dataGroupStartPos;
-	string filename = argv[1]; // A little buffer overflow protection.
+		int numberOfDataGroups;
+		unsigned int dataGroupStartPos;
+		string filename = argv[1]; // A little buffer overflow protection.
 
-#ifdef __preload__
-	ifstream ccgdCelFileSource(filename.c_str(), ios::binary);
-	istringstream ccgdCelFile;
-	ccgdCelFile.set_rdbuf(ccgdCelFileSource.rdbuf());
-	ccgdCelFileSource.close();
-#else
-	ifstream ccgdCelFile(filename.c_str(), ios::binary);
-#endif /* preload */
+		ifstream ccgdCelFile(filename.c_str(), ios::binary);
 
-	if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
-		cerr << "Bad file header.\n" << endl;
-		retval = -2;
-	} else {
+		if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
+			cerr << "Bad file header.\n" << endl;
+			retval = -2;
+		} else {
 
-	vector<DataHeaderParameter> headerParamVector;
-	if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
-		cerr << "Bad data header.\n" << endl;
-		retval = -3;
-	} else {
+			vector<DataHeaderParameter> headerParamVector;
+			if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
+				cerr << "Bad data header.\n" << endl;
+				retval = -3;
+			} else {
 
-	cout << "Number of data groups: " << numberOfDataGroups << "\n";
-	// Extract data groups
-	vector<DataGroup> allGroups;
-	allGroups.reserve(numberOfDataGroups);
-	for (int i = 0; i < numberOfDataGroups; i++) {
-		DataGroup oneGroup;
+				cout << "Number of data groups: " << numberOfDataGroups << "\n";
+				// Extract data groups
+				vector<DataGroup> allGroups;
+				allGroups.reserve(numberOfDataGroups);
+				for (int i = 0; i < numberOfDataGroups; i++) {
+					DataGroup oneGroup;
 
-		oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
-		oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
-		int numberOfDataSets = extractIntFromFile(ccgdCelFile);
-		extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
+					oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
+					oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
+					int numberOfDataSets = extractIntFromFile(ccgdCelFile);
+					extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
 
-		cout << "Data group #" << dec << i+1 << ": ";
-		wcout << oneGroup.getDataGroupName();
-		cout << "\n";
+					cout << "Data group #" << dec << i+1 << ": ";
+					wcout << oneGroup.getDataGroupName();
+					cout << "\n";
 
-		cout << "\tNumber of data sets in group #";
-        cout << i+1 << ": " << numberOfDataSets << "\n";
+					cout << "\tNumber of data sets in group #";
+					cout << i+1 << ": " << numberOfDataSets << "\n";
 
-		// Extract data sets in the current group
-		oneGroup.setDataSets().reserve(numberOfDataSets);
-		for (int j = 0; j < numberOfDataSets; j++) {
-			DataSet oneSet;
+					// Extract data sets in the current group
+					oneGroup.setDataSets().reserve(numberOfDataSets);
+					for (int j = 0; j < numberOfDataSets; j++) {
+						DataSet oneSet;
 
-			oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
-			oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
-			extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
+						oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
+						oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
+						extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
 
-			cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
-			wcout << oneSet.getDataSetName();
-			cout << "\n";
+						cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
+						wcout << oneSet.getDataSetName();
+						cout << "\n";
 
-			extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
+						extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
 
-			extractDataSet(ccgdCelFile, oneSet);
-			oneGroup.setDataSets().push_back(oneSet);
+						extractDataSet(ccgdCelFile, oneSet);
+						oneGroup.setDataSets().push_back(oneSet);
+					}
+					allGroups.push_back(oneGroup);
+				}
+			}
 		}
-		allGroups.push_back(oneGroup);
+
+		ccgdCelFile.close();
+
 	}
 
-#ifndef __preload__
-	ccgdCelFile.close();
-#endif /* undefined __preload__ */
-
 #ifdef _DEBUG
-	//cout << "\nAny key to continue." << endl;
-	//cin.get();
+	cout << "\nAny key to continue." << endl;
+	cin.get();
 #endif
 
 	return retval;
 }
-}
-}
-}
-
