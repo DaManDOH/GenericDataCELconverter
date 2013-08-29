@@ -42,31 +42,31 @@ unsigned int extractUintFromFile(istream & sourceFile) {
 }
 
 bool extractStringFromFile(istream & sourceFile, string & result) {
-	int aStringLen = extractIntFromFile(sourceFile);
-	char * buff = new char[aStringLen];
+	int stringLengthPrefix = extractIntFromFile(sourceFile);
+	char * buff = new char[stringLengthPrefix];
 
-	sourceFile.read(buff, aStringLen);
+	sourceFile.read(buff, stringLengthPrefix);
 	result.clear();
-	result.reserve(aStringLen+1);
-	result.assign(buff, aStringLen);
+	result.reserve(stringLengthPrefix+1);
+	result.assign(buff, stringLengthPrefix);
 	delete [] buff;
 
 	return true;
 }
 
 bool extractWstringFromFile(istream & sourceFile, wstring & result) {
-	int aStringLen = extractIntFromFile(sourceFile);
-	unsigned char * buff = new unsigned char[2*aStringLen];
+	int stringLengthPrefix = extractIntFromFile(sourceFile);
+	unsigned char * buff = new unsigned char[2*stringLengthPrefix];
 	char16_t oneWchar;
 
-	sourceFile.read((char*)buff, 2*aStringLen);
+	sourceFile.read((char*)buff, 2*stringLengthPrefix);
 	result.clear();
-	result.reserve(aStringLen+1);
+	result.reserve(stringLengthPrefix+1);
 
 	// .CEL files' "Unicode" wide-strings do not actually conform to
 	// the Unicode standard. Each wide-byte is big-endian instead
 	// of the required little-endian.
-	for (int i = 0; i < aStringLen; i++) {
+	for (int i = 0; i < stringLengthPrefix; i++) {
 		oneWchar = buff[i*2] << 8;
 		oneWchar += buff[(i+1)*2-1];
 		result.append(1, oneWchar);
@@ -76,7 +76,7 @@ bool extractWstringFromFile(istream & sourceFile, wstring & result) {
 	return true;
 }
 
-bool extractFileHeader(istream & sourceFile, int & groups, unsigned int & startPos) {
+bool extractFileHeader(istream & sourceFile, int & groupCount, unsigned int & startPos) {
 	unsigned char magicNum, versionNum;
 
 	sourceFile.read((char*)&magicNum, 1);
@@ -89,22 +89,22 @@ bool extractFileHeader(istream & sourceFile, int & groups, unsigned int & startP
 		return false;
 	}
 
-	groups = extractIntFromFile(sourceFile);
+	groupCount = extractIntFromFile(sourceFile);
 	startPos = extractUintFromFile(sourceFile);
 
 	return true;
 }
 
-bool extractOneHeaderTriple (istream & sourceFile, DataHeaderParameter & oneParameter) {
+bool extractOneHeaderTriple (istream & sourceFile, DataHeaderParameter & oneDHParameter) {
 	string dummyString;
 	wstring dummyWstring;
 
 	extractWstringFromFile(sourceFile, dummyWstring);
-	oneParameter.setParamName(dummyWstring);
+	oneDHParameter.setParamName(dummyWstring);
 	extractStringFromFile(sourceFile, dummyString);
-	oneParameter.setParamValue(dummyString);
+	oneDHParameter.setParamValue(dummyString);
 	extractWstringFromFile(sourceFile, dummyWstring);
-	oneParameter.setParamType(dummyWstring);
+	oneDHParameter.setParamType(dummyWstring);
 
 	return true;
 }
