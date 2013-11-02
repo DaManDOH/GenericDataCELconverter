@@ -9,7 +9,8 @@ Info: http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
+
+#include "pointer_vector.h"
 
 #include "DataGroup.h"
 
@@ -178,8 +179,15 @@ unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
 	int sumOfColumnSizes = 0; // Represents the total bytewidth of the fixed-width rows.
 	vector<ColumnMetadata>::const_iterator oneCM = oneDataSet.getColumnsMetadata().begin();
 	vector<ColumnMetadata>::const_iterator metaDataEnd = oneDataSet.getColumnsMetadata().end();
+	cout << "\t\tColumns and widths: \n";
 	for (; oneCM < metaDataEnd; oneCM++) {
-		sumOfColumnSizes += oneCM->getColumnMetaTypeSize();
+		int columnSize = oneCM->getColumnMetaTypeSize();
+		sumOfColumnSizes += columnSize;
+		cout << "\t\t\t";
+		wcout << oneCM->getColumnMetaName();
+		cout << " (";
+		cout << columnSize;
+		cout << ")\n";
 	}
 
 	unsigned int thisSetRowCount = extractUintFromFile(sourceFile);
@@ -223,9 +231,9 @@ int main( int argc, char * argv[] ) {
 
 		int numberOfDataGroups;
 		unsigned int dataGroupStartPos;
-		string filename = argv[1]; // A little buffer overflow protection.
+		string filepath = argv[1]; // A little buffer overflow protection.
 
-		ifstream ccgdCelFile(filename.c_str(), ios::binary);
+		ifstream ccgdCelFile(filepath.c_str(), ios::binary);
 
 		if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
 			cerr << "Bad file header.\n" << endl;
@@ -274,6 +282,19 @@ int main( int argc, char * argv[] ) {
 
 						extractDataSet(ccgdCelFile, oneSet);
 						oneGroup.setDataSets().push_back(oneSet);
+
+						/*
+						if (oneSet.getColumnsMetadata().at(0).getColumnMetaType() == FLOAT_COL) {
+							vector<float> tempData;
+							oneSet.getFlattenedDataRowsAsFloat(tempData);
+							ofstream tempout("D:\\tempoutput.txt");
+							for (int temp_i = 0; temp_i < tempData.size(); temp_i++) {
+								tempout << tempData.at(temp_i) << '\n';
+							}
+							tempout << flush;
+							tempout.close();
+						}
+						*/
 					}
 					allGroups.push_back(oneGroup);
 				}

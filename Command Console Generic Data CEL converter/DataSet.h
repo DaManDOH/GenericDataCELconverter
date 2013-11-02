@@ -16,6 +16,7 @@ public:
 	const std::vector<DataHeaderParameter> & getHeaderParams() const;
 	const std::vector<ColumnMetadata> & getColumnsMetadata() const;
 	const std::vector<unsigned char> & getFlattenedDataRows() const;
+	void getFlattenedDataRowsAsFloat(std::vector<float> &) const;
 
 	std::wstring & setDataSetName();
 	void setDataRowCount(unsigned int);

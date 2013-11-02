@@ -28,6 +28,20 @@ const std::vector<unsigned char> & DataSet::getFlattenedDataRows() const {
 	return data;
 }
 
+void DataSet::getFlattenedDataRowsAsFloat(std::vector<float> & dataVector) const {
+	int numFloats = data.size() / 4;
+	unsigned char oneFloatBuff[4];
+	float * oneFloatPtr;
+	for (int i = 0; i < numFloats; i++) {
+		oneFloatBuff[0] = data.at(i*4+3);
+		oneFloatBuff[1] = data.at(i*4+2);
+		oneFloatBuff[2] = data.at(i*4+1);
+		oneFloatBuff[3] = data.at(i*4);
+		oneFloatPtr = (float*)(&oneFloatBuff[0]);
+		dataVector.push_back(*oneFloatPtr);
+	}
+}
+
 std::wstring & DataSet::setDataSetName() {
 	return name;
 }

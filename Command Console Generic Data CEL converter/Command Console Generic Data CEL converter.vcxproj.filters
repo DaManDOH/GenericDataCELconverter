@@ -44,5 +44,8 @@
     <ClInclude Include="DataGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pointer_vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
