@@ -29,10 +29,11 @@ const std::vector<unsigned char> & DataSet::getFlattenedDataRows() const {
 }
 
 void DataSet::getFlattenedDataRowsAsFloat(std::vector<float> & dataVector) const {
-	int numFloats = data.size() / 4;
+	unsigned long numFloats = (unsigned long)data.size() / 4ul;
+	dataVector.reserve(numFloats);
 	unsigned char oneFloatBuff[4];
 	float * oneFloatPtr;
-	for (int i = 0; i < numFloats; i++) {
+	for (unsigned long i = 0; i < numFloats; i++) {
 		oneFloatBuff[0] = data.at(i*4+3);
 		oneFloatBuff[1] = data.at(i*4+2);
 		oneFloatBuff[2] = data.at(i*4+1);
