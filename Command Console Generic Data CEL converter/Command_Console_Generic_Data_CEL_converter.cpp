@@ -197,14 +197,14 @@ unsigned int extractDataSet(istream & sourceFile, DataSet & oneDataSet) {
 	// one-dimensional, so the reserve size should be the row
 	// count by the sum of the column widths.
 	unsigned int byteCount = thisSetRowCount*sumOfColumnSizes;
-	oneDataSet.setFlattenedDataRows().reserve(byteCount);
+	oneDataSet.setFlattenedDataElements().reserve(byteCount);
 
 	// TODO: Figure out how to use more OOP allocation.
 	unsigned char * buff;
 	if (byteCount > 0) {
 		buff = new unsigned char[byteCount];
 		sourceFile.read((char*)buff, byteCount);
-		oneDataSet.setFlattenedDataRows().assign(&buff[0], &buff[byteCount-1]);
+		oneDataSet.setFlattenedDataElements().assign(&buff[0], &buff[byteCount-1]);
 		delete [] buff;
 	}
 
@@ -283,21 +283,21 @@ int main( int argc, char * argv[] ) {
 						extractDataSet(ccgdCelFile, oneSet);
 						oneGroup.setDataSets().push_back(oneSet);
 
-						/*
-						if (oneSet.getColumnsMetadata().at(0).getColumnMetaType() == FLOAT_COL) {
-							vector<float> tempData;
-							oneSet.getFlattenedDataRowsAsFloat(tempData);
-							ofstream tempout("D:\\tempoutput.txt");
-							for (int temp_i = 0; temp_i < tempData.size(); temp_i++) {
-								tempout << tempData.at(temp_i) << '\n';
-							}
-							tempout << flush;
-							tempout.close();
-						}
-						*/
-					}
+					} // end numberOfDataSets for loop
+
 					allGroups.push_back(oneGroup);
+
+				} // end numberOfDataGroups for loop
+
+				// TODO: complete insertion op support.
+				string targetFilepath = filepath + ".csv";
+				ofstream textCelFile(targetFilepath);
+				vector<DataGroup>::const_iterator oneGroup;
+				for (oneGroup = allGroups.begin(); oneGroup < allGroups.end(); oneGroup++) {
+					textCelFile << *oneGroup << '\n';
 				}
+				textCelFile << flush;
+				textCelFile.close();
 			}
 		}
 

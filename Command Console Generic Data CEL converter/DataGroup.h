@@ -1,6 +1,7 @@
 ﻿#ifndef __GENERIC_CEL_FILE_DATA_GROUP__
 #define __GENERIC_CEL_FILE_DATA_GROUP__
 
+//#include <iostream>
 #include <string>
 #include <vector>
 
@@ -25,6 +26,8 @@ private:
 	std::wstring name;
 	std::vector<DataSet> dataSets;
 };
+
+std::ostream & operator<<(std::ostream &, const DataGroup &);
 
 #endif /* __GENERIC_CEL_FILE_DATA_GROUP__ */
 

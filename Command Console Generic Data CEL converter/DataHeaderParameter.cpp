@@ -1,14 +1,14 @@
 ﻿#include "DataHeaderParameter.h"
 
-const std::wstring & DataHeaderParameter::getParamName() {
+const std::wstring & DataHeaderParameter::getParamName() const {
 	return _name;
 }
 
-const std::string & DataHeaderParameter::getParamValue() {
+const std::string & DataHeaderParameter::getParamValue() const {
 	return _value;
 }
 
-const std::wstring & DataHeaderParameter::getParamType() {
+const std::wstring & DataHeaderParameter::getParamType() const {
 	return _type;
 }
 

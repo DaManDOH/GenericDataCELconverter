@@ -15,8 +15,8 @@ public:
 	unsigned int getNextDataSetPos() const;
 	const std::vector<DataHeaderParameter> & getHeaderParams() const;
 	const std::vector<ColumnMetadata> & getColumnsMetadata() const;
-	const std::vector<unsigned char> & getFlattenedDataRows() const;
-	void getFlattenedDataRowsAsFloat(std::vector<float> &) const;
+	const std::vector<unsigned char> & getFlattenedDataElements() const;
+	void getFlattenedDataElementsAsFloat(std::vector<float> &) const;
 
 	std::wstring & setDataSetName();
 	void setDataRowCount(unsigned int);
@@ -24,7 +24,7 @@ public:
 	void setNextDataSetPos(unsigned int);
 	std::vector<DataHeaderParameter> & setHeaderParams();
 	std::vector<ColumnMetadata> & setColumnsMetadata();
-	std::vector<unsigned char> & setFlattenedDataRows();
+	std::vector<unsigned char> & setFlattenedDataElements();
 
 private:
 	std::wstring name;
@@ -34,6 +34,8 @@ private:
 	std::vector<ColumnMetadata> columnMeta;
 	std::vector<unsigned char> data;
 };
+
+std::ostream & operator<<(std::ostream &, const DataSet &);
 
 #endif /* __GENERIC_CEL_FILE_DATA_SET__ */
 

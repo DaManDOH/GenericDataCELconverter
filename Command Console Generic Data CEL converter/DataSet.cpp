@@ -24,11 +24,11 @@ const std::vector<ColumnMetadata> & DataSet::getColumnsMetadata() const {
 	return columnMeta;
 }
 
-const std::vector<unsigned char> & DataSet::getFlattenedDataRows() const {
+const std::vector<unsigned char> & DataSet::getFlattenedDataElements() const {
 	return data;
 }
 
-void DataSet::getFlattenedDataRowsAsFloat(std::vector<float> & dataVector) const {
+void DataSet::getFlattenedDataElementsAsFloat(std::vector<float> & dataVector) const {
 	unsigned long numFloats = (unsigned long)data.size() / 4ul;
 	dataVector.reserve(numFloats);
 	unsigned char oneFloatBuff[4];
@@ -63,7 +63,36 @@ std::vector<ColumnMetadata> & DataSet::setColumnsMetadata() {
 	return columnMeta;
 }
 
-std::vector<unsigned char> & DataSet::setFlattenedDataRows() {
+std::vector<unsigned char> & DataSet::setFlattenedDataElements() {
 	return data;
 }
 
+std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
+	std::string dataSetName(lhs_obj.getDataSetName().begin(), lhs_obj.getDataSetName().end());
+	rhs_sout << dataSetName << '[';
+	std::vector<ColumnMetadata>::const_iterator oneColumnMeta = lhs_obj.getColumnsMetadata().begin();
+	std::vector<ColumnMetadata>::const_iterator allMetadataEnd = lhs_obj.getColumnsMetadata().end();
+	for (oneColumnMeta; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
+		rhs_sout << '(';
+		std::string dataSetColumnMetaName(
+				oneColumnMeta->getColumnMetaName().begin(),
+				oneColumnMeta->getColumnMetaName().end()
+			);
+		rhs_sout << dataSetColumnMetaName << ',';
+		rhs_sout << oneColumnMeta->getColumnMetaType() << ',';
+		rhs_sout << oneColumnMeta->getColumnMetaTypeSize();
+		rhs_sout << ')';
+	}
+	rhs_sout << ']';
+
+	/*
+	std::vector<float> dataRows;
+	lhs_obj.getFlattenedDataElementsAsFloat(dataRows);
+	std::vector<float>::const_iterator oneDataRow = dataRows.begin();
+	std::vector<float>::const_iterator allDataRowsEnd = dataRows.end();
+	for (oneDataRow; oneDataRow < allDataRowsEnd; oneDataRow++) {
+		rhs_sout << '\n' << *oneDataRow;
+	}
+	*/
+	return rhs_sout;
+}
