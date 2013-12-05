@@ -69,7 +69,8 @@ std::vector<unsigned char> & DataSet::setFlattenedDataElements() {
 
 std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
 	std::string dataSetName(lhs_obj.getDataSetName().begin(), lhs_obj.getDataSetName().end());
-	rhs_sout << dataSetName << '[';
+	unsigned int numColumns = (unsigned int)lhs_obj.getColumnsMetadata().size();
+	rhs_sout << dataSetName << '(' << numColumns << ')' << '[';
 	std::vector<ColumnMetadata>::const_iterator oneColumnMeta = lhs_obj.getColumnsMetadata().begin();
 	std::vector<ColumnMetadata>::const_iterator allMetadataEnd = lhs_obj.getColumnsMetadata().end();
 	for (oneColumnMeta; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
@@ -79,20 +80,22 @@ std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
 				oneColumnMeta->getColumnMetaName().end()
 			);
 		rhs_sout << dataSetColumnMetaName << ',';
-		rhs_sout << oneColumnMeta->getColumnMetaType() << ',';
+		rhs_sout << oneColumnMeta->getColumnMetaTypeAsStr() << ',';
 		rhs_sout << oneColumnMeta->getColumnMetaTypeSize();
 		rhs_sout << ')';
 	}
 	rhs_sout << ']';
+//#define __DCW_DATA_ELEMENT_OUTPUT__
+#ifdef __DCW_DATA_ELEMENT_OUTPUT__
 
-	/*
-	std::vector<float> dataRows;
-	lhs_obj.getFlattenedDataElementsAsFloat(dataRows);
-	std::vector<float>::const_iterator oneDataRow = dataRows.begin();
-	std::vector<float>::const_iterator allDataRowsEnd = dataRows.end();
-	for (oneDataRow; oneDataRow < allDataRowsEnd; oneDataRow++) {
-		rhs_sout << '\n' << *oneDataRow;
+	std::vector<float> dataElements;
+	lhs_obj.getFlattenedDataElementsAsFloat(dataElements);
+	std::vector<float>::const_iterator oneDataElement = dataElements.begin();
+	std::vector<float>::const_iterator allDataElementsEnd = dataElements.end();
+	for (oneDataElement; oneDataElement < allDataElementsEnd; oneDataElement++) {
+		rhs_sout << '\n' << *oneDataElement;
 	}
-	*/
+#endif /* __DCW_DATA_ELEMENT_OUTPUT__ */
+
 	return rhs_sout;
 }

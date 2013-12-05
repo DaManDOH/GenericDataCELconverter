@@ -290,6 +290,7 @@ int main( int argc, char * argv[] ) {
 				} // end numberOfDataGroups for loop
 
 				// TODO: complete insertion op support.
+				cout << "\n\n**Outputting text file version." << endl;
 				string targetFilepath = filepath + ".csv";
 				ofstream textCelFile(targetFilepath);
 				vector<DataGroup>::const_iterator oneGroup;
@@ -298,6 +299,7 @@ int main( int argc, char * argv[] ) {
 				}
 				textCelFile << flush;
 				textCelFile.close();
+				cout << "**Done outputting text file version." << endl;
 			}
 		}
 

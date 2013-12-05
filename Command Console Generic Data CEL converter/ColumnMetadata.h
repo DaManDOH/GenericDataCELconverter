@@ -20,12 +20,16 @@ class ColumnMetadata {
 public:
 	const std::wstring & getColumnMetaName() const;
 	ColumnMetatypeEnumType getColumnMetaType() const;
+	std::string getColumnMetaTypeAsStr() const;
 	int getColumnMetaTypeSize() const;
 	void setColumnMetaName(const std::wstring &);
 	void setColumnMetaType(ColumnMetatypeEnumType);
+	void setColumnMetaTypeFromStr(const std::string &);
 	void setColumnMetaTypeSize(int);
 
 private:
+	static std::string convMetaTypeEnumToMetaTypeStr(ColumnMetatypeEnumType);
+	static ColumnMetatypeEnumType convMetaTypeStrToMetaTypeEnum(const std::string &);
 	std::wstring _name;
 	ColumnMetatypeEnumType _type;
 	int _typeSize;
