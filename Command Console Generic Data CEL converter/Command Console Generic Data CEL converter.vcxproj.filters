@@ -30,6 +30,9 @@
     <ClCompile Include="DataSet.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="CELUtils.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataHeaderParameter.h">
@@ -44,7 +47,7 @@
     <ClInclude Include="DataGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pointer_vector.h">
+    <ClInclude Include="CELUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

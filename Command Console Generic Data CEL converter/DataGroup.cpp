@@ -37,11 +37,12 @@ std::vector<DataSet> & DataGroup::setDataSets() {
 }
 
 std::ostream & operator<<(std::ostream & rhs_sout, const DataGroup & lhs_obj) {
-	std::string dataGroupName(lhs_obj.getDataGroupName().begin(), lhs_obj.getDataGroupName().end());
+	std::wstring wideDataGroupName = lhs_obj.getDataGroupName();
+	std::string dataGroupName(wideDataGroupName.cbegin(), wideDataGroupName.cend());
 	rhs_sout << dataGroupName;
 	std::vector<DataSet>::const_iterator oneDataSet = lhs_obj.getDataSets().begin();
 	std::vector<DataSet>::const_iterator allDataSetsEnd = lhs_obj.getDataSets().end();
-	for (oneDataSet; oneDataSet < allDataSetsEnd; oneDataSet++) {
+	for (; oneDataSet < allDataSetsEnd; oneDataSet++) {
 		rhs_sout << '\n' << *oneDataSet;
 	}
 	return rhs_sout;

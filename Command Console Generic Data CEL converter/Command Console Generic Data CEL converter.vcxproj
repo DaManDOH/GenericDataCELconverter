@@ -147,13 +147,14 @@
     <ClCompile Include="DataHeaderParameter.cpp" />
     <ClCompile Include="ColumnMetadata.cpp" />
     <ClCompile Include="DataSet.cpp" />
+    <ClCompile Include="CELUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataGroup.h" />
     <ClInclude Include="ColumnMetadata.h" />
     <ClInclude Include="DataHeaderParameter.h" />
     <ClInclude Include="DataSet.h" />
-    <ClInclude Include="pointer_vector.h" />
+    <ClInclude Include="CELUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum ColumnMetatypeEnumType {
+enum ColumnTypeEnum {
 	BYTE_COL,
 	UBYTE_COL,
 	SHORT_COL,
@@ -18,20 +18,20 @@ enum ColumnMetatypeEnumType {
 class ColumnMetadata {
 
 public:
-	const std::wstring & getColumnMetaName() const;
-	ColumnMetatypeEnumType getColumnMetaType() const;
-	std::string getColumnMetaTypeAsStr() const;
-	int getColumnMetaTypeSize() const;
-	void setColumnMetaName(const std::wstring &);
-	void setColumnMetaType(ColumnMetatypeEnumType);
-	void setColumnMetaTypeFromStr(const std::string &);
-	void setColumnMetaTypeSize(int);
+	const std::wstring & getColumnName() const;
+	ColumnTypeEnum getColumnType() const;
+	std::string getColumnTypeAsStr() const;
+	int getColumnSize() const;
+	void setColumnName(const std::wstring &);
+	void setColumnType(ColumnTypeEnum);
+	void setColumnTypeFromStr(const std::string &);
+	void setColumnTypeSize(int);
 
 private:
-	static std::string convMetaTypeEnumToMetaTypeStr(ColumnMetatypeEnumType);
-	static ColumnMetatypeEnumType convMetaTypeStrToMetaTypeEnum(const std::string &);
+	static std::string convTypeEnumToStr(ColumnTypeEnum);
+	static ColumnTypeEnum convStrToTypeEnum(const std::string &);
 	std::wstring _name;
-	ColumnMetatypeEnumType _type;
+	ColumnTypeEnum _type;
 	int _typeSize;
 
 };

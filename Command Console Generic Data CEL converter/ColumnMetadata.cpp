@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <exception>
 
-std::string ColumnMetadata::convMetaTypeEnumToMetaTypeStr(ColumnMetatypeEnumType colType) {
+std::string ColumnMetadata::convTypeEnumToStr(ColumnTypeEnum colType) {
 	std::string retval;
 	switch (colType) {
 	case BYTE_COL:
@@ -39,7 +39,7 @@ std::string ColumnMetadata::convMetaTypeEnumToMetaTypeStr(ColumnMetatypeEnumType
 	return retval;
 }
 
-ColumnMetatypeEnumType ColumnMetadata::convMetaTypeStrToMetaTypeEnum(const std::string & colType) {
+ColumnTypeEnum ColumnMetadata::convStrToTypeEnum(const std::string & colType) {
 	std::string upperedColType = colType;
 	std::transform(upperedColType.begin(), upperedColType.end(), upperedColType.begin(), ::toupper);
 	if (upperedColType.compare("BYTE_COL") == 0) {
@@ -72,34 +72,34 @@ ColumnMetatypeEnumType ColumnMetadata::convMetaTypeStrToMetaTypeEnum(const std::
 	throw std::invalid_argument('\"' + colType + "\" is an invalid column type name.");
 }
 
-const std::wstring & ColumnMetadata::getColumnMetaName() const {
+const std::wstring & ColumnMetadata::getColumnName() const {
 	return _name;
 }
 
-ColumnMetatypeEnumType ColumnMetadata::getColumnMetaType() const {
+ColumnTypeEnum ColumnMetadata::getColumnType() const {
 	return _type;
 }
 
-std::string ColumnMetadata::getColumnMetaTypeAsStr() const {
-	return convMetaTypeEnumToMetaTypeStr(this->getColumnMetaType());
+std::string ColumnMetadata::getColumnTypeAsStr() const {
+	return convTypeEnumToStr(this->getColumnType());
 }
 
-int ColumnMetadata::getColumnMetaTypeSize() const {
+int ColumnMetadata::getColumnSize() const {
 	return _typeSize;
 }
 
-void ColumnMetadata::setColumnMetaName(const std::wstring & newName) {
+void ColumnMetadata::setColumnName(const std::wstring & newName) {
 	_name = newName;
 }
 
-void ColumnMetadata::setColumnMetaType(ColumnMetatypeEnumType newColType) {
+void ColumnMetadata::setColumnType(ColumnTypeEnum newColType) {
 	_type = newColType;
 }
 
-void ColumnMetadata::setColumnMetaTypeSize(int newColTypeSize) {
+void ColumnMetadata::setColumnTypeSize(int newColTypeSize) {
 	_typeSize = newColTypeSize;
 }
 
-void ColumnMetadata::setColumnMetaTypeFromStr(const std::string & newColTypeStr) {
-	_type = convMetaTypeStrToMetaTypeEnum(newColTypeStr);
+void ColumnMetadata::setColumnTypeFromStr(const std::string & newColTypeStr) {
+	_type = convStrToTypeEnum(newColTypeStr);
 }

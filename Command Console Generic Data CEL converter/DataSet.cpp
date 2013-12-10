@@ -68,20 +68,23 @@ std::vector<unsigned char> & DataSet::setFlattenedDataElements() {
 }
 
 std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
-	std::string dataSetName(lhs_obj.getDataSetName().begin(), lhs_obj.getDataSetName().end());
 	unsigned int numColumns = (unsigned int)lhs_obj.getColumnsMetadata().size();
+	std::wstring wideDataSetName = lhs_obj.getDataSetName();
+	std::string dataSetName(wideDataSetName.cbegin(), wideDataSetName.cend());
+	std::vector<ColumnMetadata>::const_iterator oneColumnMeta;
+	std::vector<ColumnMetadata>::const_iterator allMetadataEnd;
+
 	rhs_sout << dataSetName << '(' << numColumns << ')' << '[';
-	std::vector<ColumnMetadata>::const_iterator oneColumnMeta = lhs_obj.getColumnsMetadata().begin();
-	std::vector<ColumnMetadata>::const_iterator allMetadataEnd = lhs_obj.getColumnsMetadata().end();
-	for (oneColumnMeta; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
+	oneColumnMeta = lhs_obj.getColumnsMetadata().cbegin();
+	allMetadataEnd = lhs_obj.getColumnsMetadata().cend();
+	std::wstring dummyWideColumnName;
+	for (; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
+		dummyWideColumnName = oneColumnMeta->getColumnName();
+		std::string columnName(dummyWideColumnName.cbegin(), dummyWideColumnName.cend());
 		rhs_sout << '(';
-		std::string dataSetColumnMetaName(
-				oneColumnMeta->getColumnMetaName().begin(),
-				oneColumnMeta->getColumnMetaName().end()
-			);
-		rhs_sout << dataSetColumnMetaName << ',';
-		rhs_sout << oneColumnMeta->getColumnMetaTypeAsStr() << ',';
-		rhs_sout << oneColumnMeta->getColumnMetaTypeSize();
+		rhs_sout << columnName << ',';
+		rhs_sout << oneColumnMeta->getColumnTypeAsStr() << ',';
+		rhs_sout << oneColumnMeta->getColumnSize();
 		rhs_sout << ')';
 	}
 	rhs_sout << ']';
@@ -90,9 +93,9 @@ std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
 
 	std::vector<float> dataElements;
 	lhs_obj.getFlattenedDataElementsAsFloat(dataElements);
-	std::vector<float>::const_iterator oneDataElement = dataElements.begin();
-	std::vector<float>::const_iterator allDataElementsEnd = dataElements.end();
-	for (oneDataElement; oneDataElement < allDataElementsEnd; oneDataElement++) {
+	std::vector<float>::const_iterator oneDataElement = dataElements.cbegin();
+	std::vector<float>::const_iterator allDataElementsEnd = dataElements.cend();
+	for (; oneDataElement < allDataElementsEnd; oneDataElement++) {
 		rhs_sout << '\n' << *oneDataElement;
 	}
 #endif /* __DCW_DATA_ELEMENT_OUTPUT__ */
