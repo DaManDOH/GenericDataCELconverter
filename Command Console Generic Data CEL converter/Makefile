@@ -1,7 +1,7 @@
 CC=g++
-CFLAGS=--std=c++11 -Wall -Wextra
+CFLAGS=--std=c++11 -Wall -Wextra -O2
 CDEBUGFLAGS=-g -ggdb
-SOURCES=ColumnMetadata.cpp DataHeaderParameter.cpp DataSet.cpp DataGroup.cpp Command_Console_Generic_Data_CEL_converter.cpp
+SOURCES=CELUtils.cpp ColumnMetadata.cpp DataHeaderParameter.cpp DataSet.cpp DataGroup.cpp Command_Console_Generic_Data_CEL_converter.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 DEBUGOBJECTS=$(SOURCES:.cpp=.do)
 TARGET=ccgdCELc.exe
@@ -15,8 +15,13 @@ $(TARGET): $(OBJECTS)
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-debug:
-	$(CC) $(CFLAGS) $(CDEBUGFLAGS) $(SOURCES) -o $(DEBUGTARGET)
+debug: $(SOURCES) $(DEBUGTARGET)
+
+$(DEBUGTARGET): $(DEBUGOBJECTS)
+	$(CC) $(DEBUGOBJECTS) -o $@
+
+.do:
+	$(CC) $(CDEBUGFLAGS) -c $< -o $@
 
 clean:
 	rm -rf *.o *.do $(TARGET) $(DEBUGTARGET)

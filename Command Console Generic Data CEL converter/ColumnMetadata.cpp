@@ -1,7 +1,7 @@
 ﻿#include "ColumnMetadata.h"
 
 #include <algorithm>
-#include <exception>
+#include <stdexcept>
 
 std::string ColumnMetadata::convTypeEnumToStr(ColumnTypeEnum colType) {
 	std::string retval;

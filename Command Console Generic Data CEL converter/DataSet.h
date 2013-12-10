@@ -1,6 +1,7 @@
 ﻿#ifndef __GENERIC_CEL_FILE_DATA_SET__
 #define __GENERIC_CEL_FILE_DATA_SET__
 
+#include <fstream>
 #include <string>
 #include <vector>
 
