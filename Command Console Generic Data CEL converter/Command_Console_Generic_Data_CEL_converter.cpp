@@ -100,10 +100,10 @@ int main( int argc, char * argv[] ) {
 
 	}
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	cout << "\nAny key to continue." << endl;
 	cin.get();
-#endif
+//#endif
 
 	return retval;
 }

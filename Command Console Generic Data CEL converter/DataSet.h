@@ -25,7 +25,9 @@ public:
 	void setNextDataSetPos(unsigned int);
 	std::vector<DataHeaderParameter> & setHeaderParams();
 	std::vector<ColumnMetadata> & setColumnsMetadata();
-	std::vector<unsigned char> & setFlattenedDataElements();
+	void setFlattenedDataElementsReserve(unsigned long long);
+	void setFlattenedDataElements(const unsigned char *, const unsigned char *);
+	void setFlattenedDataElements(std::vector<unsigned char> const &);
 
 private:
 	std::wstring name;

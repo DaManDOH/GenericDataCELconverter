@@ -160,15 +160,15 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 	// Extract the data set's rows. The DataSet class' buffer is
 	// one-dimensional, so the reserve size should be the row
 	// count by the sum of the column widths.
-	unsigned int byteCount = thisSetRowCount*sumOfColumnSizes;
-	oneDataSet.setFlattenedDataElements().reserve(byteCount);
+	unsigned long long byteCount = thisSetRowCount*sumOfColumnSizes;
+	oneDataSet.setFlattenedDataElementsReserve(byteCount);
 
-	// TODO: Figure out how to use more OOP allocation.
+	// TODO: Figure out how to implement a more OOP-based allocation.
 	unsigned char * buff;
 	if (byteCount > 0) {
 		buff = new unsigned char[byteCount];
 		sourceFile.read((char*)buff, byteCount);
-		oneDataSet.setFlattenedDataElements().assign(&buff[0], &buff[byteCount-1]);
+		oneDataSet.setFlattenedDataElements(&buff[0], &buff[byteCount-1]);
 		delete [] buff;
 	}
 

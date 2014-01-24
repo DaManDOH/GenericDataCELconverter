@@ -63,8 +63,16 @@ std::vector<ColumnMetadata> & DataSet::setColumnsMetadata() {
 	return columnMeta;
 }
 
-std::vector<unsigned char> & DataSet::setFlattenedDataElements() {
-	return data;
+void DataSet::setFlattenedDataElementsReserve(unsigned long long maxNumElements) {
+	data.reserve(maxNumElements);
+}
+
+void DataSet::setFlattenedDataElements(const unsigned char * start, const unsigned char * end) {
+	data.assign(start, end);
+}
+
+void DataSet::setFlattenedDataElements(std::vector<unsigned char> const & sourceVec) {
+	data.assign(sourceVec.begin(), sourceVec.end());
 }
 
 std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
@@ -88,9 +96,9 @@ std::ostream & operator<<(std::ostream & rhs_sout, const DataSet & lhs_obj) {
 		rhs_sout << ')';
 	}
 	rhs_sout << ']';
-//#define __DCW_DATA_ELEMENT_OUTPUT__
-#ifdef __DCW_DATA_ELEMENT_OUTPUT__
 
+#define __DCW_DATA_ELEMENT_OUTPUT__
+#ifdef __DCW_DATA_ELEMENT_OUTPUT__
 	std::vector<float> dataElements;
 	lhs_obj.getFlattenedDataElementsAsFloat(dataElements);
 	std::vector<float>::const_iterator oneDataElement = dataElements.cbegin();
