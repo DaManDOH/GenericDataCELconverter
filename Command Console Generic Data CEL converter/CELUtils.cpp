@@ -156,6 +156,7 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 
 	unsigned int thisSetRowCount = extractUintFromFile(sourceFile);
 	std::cout << "\t\tNumber of rows: " << thisSetRowCount << "\n";
+	oneDataSet.setRowCount(thisSetRowCount);
 
 	// Extract the data set's rows. The DataSet class' buffer is
 	// one-dimensional, so the reserve size should be the row
@@ -163,7 +164,7 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 	unsigned long long byteCount = thisSetRowCount*sumOfColumnSizes;
 	oneDataSet.setFlattenedDataElementsReserve(byteCount);
 
-	// TODO: Figure out how to implement a more OOP-based allocation.
+	// TODO: Implement a more OOP-based allocation.
 	unsigned char * buff;
 	if (byteCount > 0) {
 		buff = new unsigned char[byteCount];
@@ -172,13 +173,21 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 		delete [] buff;
 	}
 
-	// TODO: Figure out why the bytewidth is SOMETIMES out-of-sync.
+	// Done: Figure out why the bytewidth is SOMETIMES out-of-sync.
+	//
+	//       By the newest Command Console Generic Data File Format documentation:
+	//
+	//       "When [the current data set] is the last data set in the data
+	//        group the value shall be 1 byte past the end of the data set. This
+	//        way the size of the data set may be determined."
+	//
+	//       Therefore, the null byte is part of the spec.
 	unsigned int currentPos = (unsigned int)sourceFile.tellg();
 	unsigned int nextDataSetPos = oneDataSet.getNextDataSetPos();
 	if (currentPos != nextDataSetPos) {
-		std::cerr << std::dec << "\t\t!! ";
-		std::cerr << nextDataSetPos - currentPos;
-		std::cerr << "-byte correction!!\n";
+		if (nextDataSetPos - currentPos > 1) {
+			// TODO: define and throw an exception.
+		}
 		sourceFile.seekg(nextDataSetPos);
 	}
 

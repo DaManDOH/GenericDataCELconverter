@@ -7,47 +7,47 @@
 
 /*
 */
-int extractIntFromFile(std::istream & sourceFile);
+int extractIntFromFile(std::istream &);
 
 /*
 */
-unsigned int extractUintFromFile(std::istream & sourceFile);
+unsigned int extractUintFromFile(std::istream &);
 
 /*
 */
-bool extractStringFromFile(std::istream & sourceFile, std::string & result);
+bool extractStringFromFile(std::istream &, std::string &);
 
 /*
 */
-bool extractWstringFromFile(std::istream & sourceFile, std::wstring & result);
+bool extractWstringFromFile(std::istream &, std::wstring &);
 
 /*
 */
-bool extractFileHeader(std::istream & sourceFile, int & groupCount, unsigned int & startPos);
+bool extractFileHeader(std::istream &, int &, unsigned int &);
 
 /*
 */
-bool extractOneHeaderTriple (std::istream & sourceFile, DataHeaderParameter & oneDHParameter);
+bool extractOneHeaderTriple (std::istream &, DataHeaderParameter &);
 
 /*
 */
-bool extractNameTypeValueTrips(std::istream & sourceFile, std::vector<DataHeaderParameter> & vectorToStoreParameters);
+bool extractNameTypeValueTrips(std::istream &, std::vector<DataHeaderParameter> &);
 
 /*
 */
-bool extractGenericDataHeader(std::istream & sourceFile, std::vector<DataHeaderParameter> & vectorToStoreParameters);
+bool extractGenericDataHeader(std::istream &, std::vector<DataHeaderParameter> &);
 
 /*
 */
-bool extractOneColumnMeta(std::istream & sourceFile, ColumnMetadata & oneColumn);
+bool extractOneColumnMeta(std::istream &, ColumnMetadata &);
 
 /*
 */
-bool extractDataSetMeta(std::istream & sourceFile, std::vector<ColumnMetadata> & vectorToStoreColumnMeta);
+bool extractDataSetMeta(std::istream &, std::vector<ColumnMetadata> &);
 
 /*
 */
-unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet);
+unsigned int extractDataSet(std::istream &, DataSet &);
 
 /*
 */

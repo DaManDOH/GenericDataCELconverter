@@ -1,39 +1,39 @@
 ﻿#include "DataGroup.h"
 
 unsigned int DataGroup::getNextDataGroupPos() const {
-	return posNext;
+	return _posNext;
 }
 
 unsigned int DataGroup::getStartPos() const {
-	return startPos;
+	return _startPos;
 }
 
 int DataGroup::getDataSetCount() const {
-	return (int)dataSets.size();
+	return (int)_dataSets.size();
 }
 
 const std::wstring & DataGroup::getDataGroupName() const {
-	return name;
+	return _name;
 }
 
 const std::vector<DataSet> & DataGroup::getDataSets() const {
-	return dataSets;
+	return _dataSets;
 }
 
 void DataGroup::setNextDataGroupPos(unsigned int newNextPos) {
-	posNext = newNextPos;
+	_posNext = newNextPos;
 }
 
 void DataGroup::setStartPos(unsigned int newStartPos) {
-	startPos = newStartPos;
+	_startPos = newStartPos;
 }
 
 std::wstring & DataGroup::setDataGroupName() {
-	return name;
+	return _name;
 }
 
 std::vector<DataSet> & DataGroup::setDataSets() {
-	return dataSets;
+	return _dataSets;
 }
 
 std::ostream & operator<<(std::ostream & rhs_sout, const DataGroup & lhs_obj) {

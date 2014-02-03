@@ -6,11 +6,29 @@
 class DataHeaderParameter {
 
 public:
+	/*
+	*/
 	const std::wstring & getParamName() const;
+
+	/*
+	*/
 	const std::string & getParamValue() const;
+
+	/*
+	*/
 	const std::wstring & getParamType() const;
+
+
+	/*
+	*/
 	void setParamName(const std::wstring &);
+
+	/*
+	*/
 	void setParamValue(const std::string &);
+
+	/*
+	*/
 	void setParamType(const std::wstring &);
 
 private:

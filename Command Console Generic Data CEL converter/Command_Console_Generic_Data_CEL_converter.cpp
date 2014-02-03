@@ -28,82 +28,89 @@ int main( int argc, char * argv[] ) {
 
 		ifstream ccgdCelFile(filepath.c_str(), ios::binary);
 
-		if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
-			cerr << "Bad file header.\n" << endl;
+		if (ccgdCelFile.fail()) {
+			cerr << "Error opening file \"" << filepath << "\".\n" << endl;
 			retval = -2;
 		} else {
 
-			vector<DataHeaderParameter> headerParamVector;
-			if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
-				cerr << "Bad data header.\n" << endl;
+			if (!extractFileHeader(ccgdCelFile, numberOfDataGroups, dataGroupStartPos)) {
+				cerr << "Bad file header.\n" << endl;
 				retval = -3;
 			} else {
 
-				cout << "Number of data groups: " << numberOfDataGroups << "\n";
-				// Extract data groups
-				vector<DataGroup> allGroups;
-				allGroups.reserve(numberOfDataGroups);
-				for (int i = 0; i < numberOfDataGroups; i++) {
-					DataGroup oneGroup;
+				vector<DataHeaderParameter> headerParamVector;
+				if (!extractGenericDataHeader(ccgdCelFile, headerParamVector)) {
+					cerr << "Bad data header.\n" << endl;
+					retval = -4;
+				} else {
 
-					oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
-					oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
-					int numberOfDataSets = extractIntFromFile(ccgdCelFile);
-					extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
+					cout << "Number of data groups: " << numberOfDataGroups << "\n";
+					// Extract data groups
+					vector<DataGroup> allGroups;
+					allGroups.reserve(numberOfDataGroups);
+					for (int i = 0; i < numberOfDataGroups; i++) {
+						DataGroup oneGroup;
 
-					cout << "Data group #" << dec << i+1 << ": ";
-					wcout << oneGroup.getDataGroupName();
-					cout << "\n";
+						oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
+						oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
+						int numberOfDataSets = extractIntFromFile(ccgdCelFile);
+						extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
 
-					cout << "\tNumber of data sets in group #";
-					cout << i+1 << ": " << numberOfDataSets << "\n";
-
-					// Extract data sets in the current group
-					oneGroup.setDataSets().reserve(numberOfDataSets);
-					for (int j = 0; j < numberOfDataSets; j++) {
-						DataSet oneSet;
-
-						oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
-						oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
-						extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
-
-						cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
-						wcout << oneSet.getDataSetName();
+						cout << "Data group #" << dec << i+1 << ": ";
+						wcout << oneGroup.getDataGroupName();
 						cout << "\n";
 
-						extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
+						cout << "\tNumber of data sets in group #";
+						cout << i+1 << ": " << numberOfDataSets << "\n";
 
-						extractDataSet(ccgdCelFile, oneSet);
-						oneGroup.setDataSets().push_back(oneSet);
+						// Extract data sets in the current group
+						oneGroup.setDataSets().reserve(numberOfDataSets);
+						for (int j = 0; j < numberOfDataSets; j++) {
+							DataSet oneSet;
 
-					} // end numberOfDataSets for loop
+							oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
+							oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
+							extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
 
-					allGroups.push_back(oneGroup);
+							cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
+							wcout << oneSet.getDataSetName();
+							cout << "\n";
 
-				} // end numberOfDataGroups for loop
+							extractNameTypeValueTrips(ccgdCelFile, oneSet.setHeaderParams());
 
-				cout << "\n\n**Outputting text file version." << endl;
-				string targetFilepath = filepath + ".csv";
-				ofstream textCelFile(targetFilepath);
-				vector<DataGroup>::const_iterator oneGroup = allGroups.cbegin();
-				vector<DataGroup>::const_iterator allGroupsEnd = allGroups.cend();
-				for (; oneGroup < allGroupsEnd; oneGroup++) {
-					textCelFile << *oneGroup << '\n';
+							extractDataSet(ccgdCelFile, oneSet);
+							oneGroup.setDataSets().push_back(oneSet);
+
+						} // end numberOfDataSets for loop
+
+						allGroups.push_back(oneGroup);
+
+					} // end numberOfDataGroups for loop
+
+					cout << "\n\n**Outputting text file version." << endl;
+					string targetFilepath = filepath + ".csv";
+					ofstream textCelFile(targetFilepath);
+					vector<DataGroup>::const_iterator oneGroup = allGroups.cbegin();
+					vector<DataGroup>::const_iterator allGroupsEnd = allGroups.cend();
+					for (; oneGroup < allGroupsEnd; oneGroup++) {
+						textCelFile << *oneGroup << '\n';
+					}
+					textCelFile << flush;
+					textCelFile.close();
+					cout << "**Done outputting text file version." << endl;
 				}
-				textCelFile << flush;
-				textCelFile.close();
-				cout << "**Done outputting text file version." << endl;
 			}
-		}
 
-		ccgdCelFile.close();
+			ccgdCelFile.close();
+
+		}
 
 	}
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
 	cout << "\nAny key to continue." << endl;
 	cin.get();
-//#endif
+#endif
 
 	return retval;
 }
