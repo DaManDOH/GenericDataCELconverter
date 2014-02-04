@@ -65,19 +65,17 @@ void DataSet::setFlattenedDataElements(std::vector<unsigned char> const & source
 }
 
 std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
-	std::wstring dummyWideColumnName;
-	std::wstring wideDataSetName = rhs_obj.getDataSetName();
-	std::string dataSetName(wideDataSetName.cbegin(), wideDataSetName.cend());
+	std::string dataSetName(rhs_obj._name.cbegin(), rhs_obj._name.cend());
+	unsigned int numColumns = (unsigned int)rhs_obj._columnMeta.size();
+	unsigned int numRows = rhs_obj.getRowCount();
+	lhs_sout << '"' << dataSetName << '(' << numColumns << 'x' << numRows << ')' << '[';
 
 	std::vector<ColumnMetadata>::const_iterator oneColumnMeta;
 	std::vector<ColumnMetadata>::const_iterator allMetadataEnd;
-
-	unsigned int numColumns = (unsigned int)rhs_obj._columnMeta.size();
-	unsigned int numRows = rhs_obj.getRowCount();
-	lhs_sout << dataSetName << '(' << numColumns << 'x' << numRows << ')' << '[';
-
 	oneColumnMeta = rhs_obj._columnMeta.cbegin();
 	allMetadataEnd = rhs_obj._columnMeta.cend();
+
+	std::wstring dummyWideColumnName;
 	for (; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
 		dummyWideColumnName = oneColumnMeta->getColumnName();
 		std::string columnName(dummyWideColumnName.cbegin(), dummyWideColumnName.cend());
@@ -87,17 +85,20 @@ std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
 		lhs_sout << oneColumnMeta->getColumnSize();
 		lhs_sout << ')';
 	}
-	lhs_sout << "]\n";
+
+	lhs_sout << "]\"\n";
 
 	if (numRows > 0) {
-		allMetadataEnd = rhs_obj._columnMeta.cend();
-		std::vector<unsigned char>::const_iterator dataCursor = rhs_obj._data.cbegin();
-		std::vector<unsigned char>::const_iterator rawDataEnd = rhs_obj._data.cend();
 		unsigned char oneElementBuff[4];
-		for (unsigned int i = 0; i < numRows-1; i++) {
-			lhs_sout << i << ": ";
+		std::vector<unsigned char>::const_iterator dataCursor, rawDataEnd;
+		dataCursor = rhs_obj._data.cbegin();
+		rawDataEnd = rhs_obj._data.cend();
+
+		for (unsigned int i = 1; i < numRows+1; i++) {
+
 			oneColumnMeta = rhs_obj._columnMeta.cbegin();
 			for (; oneColumnMeta < allMetadataEnd; oneColumnMeta++) {
+
 				switch (oneColumnMeta->getColumnType()) {
 				case BYTE_COL:
 					oneElementBuff[0] = *(dataCursor++);
@@ -142,11 +143,11 @@ std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
 					break;
 				case WSTRING_COL:
 					break;
-				}
+				} // end switch (oneColumnMeta->getColumnType())
 				lhs_sout << ',';
-			}
+			} // end for (; oneColumnMeta < allMetadataEnd; oneColumnMeta++)
 			lhs_sout << '\n';
-		}
+		} // end for upper-bounded by numRows
 	}
 
 	return lhs_sout;

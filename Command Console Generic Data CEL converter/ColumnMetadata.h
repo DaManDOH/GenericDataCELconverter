@@ -3,6 +3,8 @@
 
 #include <string>
 
+/*
+*/
 enum ColumnTypeEnum {
 	BYTE_COL,
 	UBYTE_COL,
@@ -15,6 +17,8 @@ enum ColumnTypeEnum {
 	WSTRING_COL
 };
 
+/*
+*/
 class ColumnMetadata {
 
 public:

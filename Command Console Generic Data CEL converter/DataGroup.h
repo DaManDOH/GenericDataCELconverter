@@ -1,12 +1,13 @@
 ﻿#ifndef __GENERIC_CEL_FILE_DATA_GROUP__
 #define __GENERIC_CEL_FILE_DATA_GROUP__
 
-//#include <iostream>
 #include <string>
 #include <vector>
 
 #include "DataSet.h"
 
+/*
+*/
 class DataGroup {
 public:
 	/*
@@ -51,6 +52,8 @@ private:
 	unsigned int _startPos;
 	std::wstring _name;
 	std::vector<DataSet> _dataSets;
+
+	friend std::ostream & operator<<(std::ostream &, const DataGroup &);
 };
 
 std::ostream & operator<<(std::ostream &, const DataGroup &);

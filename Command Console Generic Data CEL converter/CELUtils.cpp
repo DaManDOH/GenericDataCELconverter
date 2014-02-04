@@ -1,6 +1,6 @@
 #include "CELUtils.h"
 
-int extractIntFromFile(std::istream & sourceFile) {
+int extractIntFromStream(std::istream & sourceFile) {
 	return extractIntegralBytesFromFile<int>(sourceFile, 4);
 }
 
@@ -9,7 +9,7 @@ unsigned int extractUintFromFile(std::istream & sourceFile) {
 }
 
 bool extractStringFromFile(std::istream & sourceFile, std::string & result) {
-	int stringLengthPrefix = extractIntFromFile(sourceFile);
+	int stringLengthPrefix = extractIntFromStream(sourceFile);
 	char * buff = new char[stringLengthPrefix];
 
 	sourceFile.read(buff, stringLengthPrefix);
@@ -22,7 +22,7 @@ bool extractStringFromFile(std::istream & sourceFile, std::string & result) {
 }
 
 bool extractWstringFromFile(std::istream & sourceFile, std::wstring & result) {
-	int stringLengthPrefix = extractIntFromFile(sourceFile);
+	int stringLengthPrefix = extractIntFromStream(sourceFile);
 	unsigned char * buff = new unsigned char[2*stringLengthPrefix];
 	char16_t oneWchar;
 
@@ -54,7 +54,7 @@ bool extractFileHeader(std::istream & sourceFile, int & groupCount, unsigned int
 		return false;
 	}
 
-	groupCount = extractIntFromFile(sourceFile);
+	groupCount = extractIntFromStream(sourceFile);
 	startPos = extractUintFromFile(sourceFile);
 
 	return true;
@@ -75,7 +75,7 @@ bool extractOneHeaderTriple (std::istream & sourceFile, DataHeaderParameter & on
 }
 
 bool extractNameTypeValueTrips(std::istream & sourceFile, std::vector<DataHeaderParameter> & vectorToStoreParameters) {
-	int paramCount = extractIntFromFile(sourceFile);
+	int paramCount = extractIntFromStream(sourceFile);
 
 	vectorToStoreParameters.reserve(paramCount);
 	for (int i = 0; i < paramCount; i++) {
@@ -103,7 +103,7 @@ bool extractGenericDataHeader(std::istream & sourceFile, std::vector<DataHeaderP
 	// Extract and ignore parent Generic Data Headers
 	bool parentRecordsExtracted = true;
 	std::vector<DataHeaderParameter> parentParamVector;
-	parentHeaderCount = extractIntFromFile(sourceFile);
+	parentHeaderCount = extractIntFromStream(sourceFile);
 	parentParamVector.reserve(parentHeaderCount);
 	for (int i = 0; i < parentHeaderCount; i++) {
 		parentRecordsExtracted &= extractGenericDataHeader(sourceFile, parentParamVector);
@@ -119,7 +119,7 @@ bool extractOneColumnMeta(std::istream & sourceFile, ColumnMetadata & oneColumn)
 	unsigned char oneChar = extractIntegralBytesFromFile<unsigned char>(sourceFile, 1);
 	//sourceFile.read((char*)&oneChar, 1);
 	oneColumn.setColumnType((ColumnTypeEnum)oneChar);
-	oneColumn.setColumnTypeSize(extractIntFromFile(sourceFile));
+	oneColumn.setColumnTypeSize(extractIntFromStream(sourceFile));
 	return true;
 }
 
@@ -169,7 +169,7 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 	if (byteCount > 0) {
 		buff = new unsigned char[byteCount];
 		sourceFile.read((char*)buff, byteCount);
-		oneDataSet.setFlattenedDataElements(&buff[0], &buff[byteCount-1]);
+		oneDataSet.setFlattenedDataElements(buff, &buff[byteCount]);
 		delete [] buff;
 	}
 

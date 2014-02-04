@@ -36,14 +36,14 @@ std::vector<DataSet> & DataGroup::setDataSets() {
 	return _dataSets;
 }
 
-std::ostream & operator<<(std::ostream & rhs_sout, const DataGroup & lhs_obj) {
-	std::wstring wideDataGroupName = lhs_obj.getDataGroupName();
-	std::string dataGroupName(wideDataGroupName.cbegin(), wideDataGroupName.cend());
-	rhs_sout << dataGroupName;
-	std::vector<DataSet>::const_iterator oneDataSet = lhs_obj.getDataSets().begin();
-	std::vector<DataSet>::const_iterator allDataSetsEnd = lhs_obj.getDataSets().end();
+std::ostream & operator<<(std::ostream & lhs_sout, const DataGroup & rhs_obj) {
+	std::string dataGroupName(rhs_obj._name.cbegin(), rhs_obj._name.cend());
+	lhs_sout << '"' << dataGroupName << "\"\n";
+	std::vector<DataSet>::const_iterator oneDataSet, allDataSetsEnd;
+	oneDataSet = rhs_obj._dataSets.begin();
+	allDataSetsEnd = rhs_obj._dataSets.end();
 	for (; oneDataSet < allDataSetsEnd; oneDataSet++) {
-		rhs_sout << '\n' << *oneDataSet;
+		lhs_sout << *oneDataSet;
 	}
-	return rhs_sout;
+	return lhs_sout;
 }

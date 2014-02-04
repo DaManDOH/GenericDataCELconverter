@@ -53,7 +53,7 @@ int main( int argc, char * argv[] ) {
 
 						oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
 						oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
-						int numberOfDataSets = extractIntFromFile(ccgdCelFile);
+						int numberOfDataSets = extractIntFromStream(ccgdCelFile);
 						extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
 
 						cout << "Data group #" << dec << i+1 << ": ";
@@ -93,7 +93,7 @@ int main( int argc, char * argv[] ) {
 					vector<DataGroup>::const_iterator oneGroup = allGroups.cbegin();
 					vector<DataGroup>::const_iterator allGroupsEnd = allGroups.cend();
 					for (; oneGroup < allGroupsEnd; oneGroup++) {
-						textCelFile << *oneGroup << '\n';
+						textCelFile << *oneGroup;
 					}
 					textCelFile << flush;
 					textCelFile.close();

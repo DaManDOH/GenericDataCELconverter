@@ -7,7 +7,7 @@
 
 /*
 */
-int extractIntFromFile(std::istream &);
+int extractIntFromStream(std::istream &);
 
 /*
 */
