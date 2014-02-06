@@ -7,19 +7,19 @@
 
 /*
 */
-int extractIntFromStream(std::istream &);
+int extractInt(std::istream &);
 
 /*
 */
-unsigned int extractUintFromFile(std::istream &);
+unsigned int extractUint(std::istream &);
 
 /*
 */
-bool extractStringFromFile(std::istream &, std::string &);
+bool extractString(std::istream &, std::string &);
 
 /*
 */
-bool extractWstringFromFile(std::istream &, std::wstring &);
+bool extractWstring(std::istream &, std::wstring &);
 
 /*
 */
@@ -52,7 +52,7 @@ unsigned int extractDataSet(std::istream &, DataSet &);
 /*
 */
 template<typename T>
-T extractIntegralBytesFromFile(std::istream & sourceFile, int n_bytes) {
+T extractIntegralBytes(std::istream & sourceFile, int n_bytes) {
 	unsigned char *dummy = new unsigned char[n_bytes];
 	T retval = 0;
 	int byteIndex = 0;

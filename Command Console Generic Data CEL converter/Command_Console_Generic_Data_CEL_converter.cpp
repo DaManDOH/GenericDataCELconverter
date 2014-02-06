@@ -51,10 +51,10 @@ int main( int argc, char * argv[] ) {
 					for (int i = 0; i < numberOfDataGroups; i++) {
 						DataGroup oneGroup;
 
-						oneGroup.setNextDataGroupPos(extractUintFromFile(ccgdCelFile));
-						oneGroup.setStartPos(extractUintFromFile(ccgdCelFile));
-						int numberOfDataSets = extractIntFromStream(ccgdCelFile);
-						extractWstringFromFile(ccgdCelFile, oneGroup.setDataGroupName());
+						oneGroup.setNextDataGroupPos(extractUint(ccgdCelFile));
+						oneGroup.setStartPos(extractUint(ccgdCelFile));
+						int numberOfDataSets = extractInt(ccgdCelFile);
+						extractWstring(ccgdCelFile, oneGroup.setDataGroupName());
 
 						cout << "Data group #" << dec << i+1 << ": ";
 						wcout << oneGroup.getDataGroupName();
@@ -68,9 +68,9 @@ int main( int argc, char * argv[] ) {
 						for (int j = 0; j < numberOfDataSets; j++) {
 							DataSet oneSet;
 
-							oneSet.setFirstDataElementPos(extractUintFromFile(ccgdCelFile));
-							oneSet.setNextDataSetPos(extractUintFromFile(ccgdCelFile));
-							extractWstringFromFile(ccgdCelFile, oneSet.setDataSetName());
+							oneSet.setFirstDataElementPos(extractUint(ccgdCelFile));
+							oneSet.setNextDataSetPos(extractUint(ccgdCelFile));
+							extractWstring(ccgdCelFile, oneSet.setDataSetName());
 
 							cout << "\tData set #" << dec << j+1 << " in group #" << i+1 << ": ";
 							wcout << oneSet.getDataSetName();
@@ -90,8 +90,9 @@ int main( int argc, char * argv[] ) {
 					cout << "\n\n**Outputting text file version." << endl;
 					string targetFilepath = filepath + ".csv";
 					ofstream textCelFile(targetFilepath);
-					vector<DataGroup>::const_iterator oneGroup = allGroups.cbegin();
-					vector<DataGroup>::const_iterator allGroupsEnd = allGroups.cend();
+					vector<DataGroup>::const_iterator oneGroup, allGroupsEnd;
+					oneGroup = allGroups.cbegin();
+					allGroupsEnd = allGroups.cend();
 					for (; oneGroup < allGroupsEnd; oneGroup++) {
 						textCelFile << *oneGroup;
 					}

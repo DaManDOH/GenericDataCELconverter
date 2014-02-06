@@ -64,6 +64,36 @@ void DataSet::setFlattenedDataElements(std::vector<unsigned char> const & source
 	_data.assign(sourceVec.begin(), sourceVec.end());
 }
 
+int readBigEndianInt(std::vector<unsigned char>::const_iterator & cursor) {
+	char retval[4];
+	retval[3] = *(cursor++);
+	retval[2] = *(cursor++);
+	retval[1] = *(cursor++);
+	retval[0] = *(cursor++);
+	return *((int*)retval);
+}
+
+std::string readString(std::vector<unsigned char>::const_iterator & cursor, int charCount) {
+	std::string retval;
+	retval.reserve(charCount);
+	for (int i = charCount - 1; i > -1; i--) {
+		retval.push_back((char)*(cursor++));
+	}
+	return retval;
+}
+
+std::wstring readWstring(std::vector<unsigned char>::const_iterator & cursor, int charCount) {
+	std::wstring retval;
+	retval.reserve(charCount);
+	unsigned short oneVal;
+	for (int i = charCount - 1; i > -1; i--) {
+		oneVal = (unsigned short)(*(cursor) << 8) + (unsigned short)*(cursor+1);
+		retval.push_back((wchar_t)oneVal);
+		cursor++; cursor++;
+	}
+	return retval;
+}
+
 std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
 	std::string dataSetName(rhs_obj._name.cbegin(), rhs_obj._name.cend());
 	unsigned int numColumns = (unsigned int)rhs_obj._columnMeta.size();
@@ -89,7 +119,10 @@ std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
 	lhs_sout << "]\"\n";
 
 	if (numRows > 0) {
+		int strLen;
 		unsigned char oneElementBuff[4];
+		std::string oneCELString;
+		std::wstring oneCELWstring;
 		std::vector<unsigned char>::const_iterator dataCursor, rawDataEnd;
 		dataCursor = rhs_obj._data.cbegin();
 		rawDataEnd = rhs_obj._data.cend();
@@ -140,8 +173,15 @@ std::ostream & operator<<(std::ostream & lhs_sout, const DataSet & rhs_obj) {
 					lhs_sout << *((float*)oneElementBuff);
 					break;
 				case STRING_COL:
+					strLen = readBigEndianInt(dataCursor);
+					lhs_sout << '"' << readString(dataCursor, strLen) << '"';
 					break;
 				case WSTRING_COL:
+					strLen = readBigEndianInt(dataCursor);
+					oneCELWstring = readWstring(dataCursor, strLen);
+					oneCELString.clear();
+					oneCELString.assign(oneCELWstring.cbegin(), oneCELWstring.cend());
+					lhs_sout << '"' << oneCELString << '"';
 					break;
 				} // end switch (oneColumnMeta->getColumnType())
 				lhs_sout << ',';

@@ -1,15 +1,15 @@
 #include "CELUtils.h"
 
-int extractIntFromStream(std::istream & sourceFile) {
-	return extractIntegralBytesFromFile<int>(sourceFile, 4);
+int extractInt(std::istream & sourceFile) {
+	return extractIntegralBytes<int>(sourceFile, 4);
 }
 
-unsigned int extractUintFromFile(std::istream & sourceFile) {
-	return extractIntegralBytesFromFile<unsigned int>(sourceFile, 4);
+unsigned int extractUint(std::istream & sourceFile) {
+	return extractIntegralBytes<unsigned int>(sourceFile, 4);
 }
 
-bool extractStringFromFile(std::istream & sourceFile, std::string & result) {
-	int stringLengthPrefix = extractIntFromStream(sourceFile);
+bool extractString(std::istream & sourceFile, std::string & result) {
+	int stringLengthPrefix = extractInt(sourceFile);
 	char * buff = new char[stringLengthPrefix];
 
 	sourceFile.read(buff, stringLengthPrefix);
@@ -21,8 +21,8 @@ bool extractStringFromFile(std::istream & sourceFile, std::string & result) {
 	return true;
 }
 
-bool extractWstringFromFile(std::istream & sourceFile, std::wstring & result) {
-	int stringLengthPrefix = extractIntFromStream(sourceFile);
+bool extractWstring(std::istream & sourceFile, std::wstring & result) {
+	int stringLengthPrefix = extractInt(sourceFile);
 	unsigned char * buff = new unsigned char[2*stringLengthPrefix];
 	char16_t oneWchar;
 
@@ -44,18 +44,18 @@ bool extractWstringFromFile(std::istream & sourceFile, std::wstring & result) {
 }
 
 bool extractFileHeader(std::istream & sourceFile, int & groupCount, unsigned int & startPos) {
-	int magicNum = extractIntegralBytesFromFile<int>(sourceFile, 1);
+	int magicNum = extractIntegralBytes<int>(sourceFile, 1);
 	if ( magicNum != 59 ) {
 		return false;
 	}
 
-	int versionNum = extractIntegralBytesFromFile<int>(sourceFile, 1);
+	int versionNum = extractIntegralBytes<int>(sourceFile, 1);
 	if ( versionNum != 1 ) {
 		return false;
 	}
 
-	groupCount = extractIntFromStream(sourceFile);
-	startPos = extractUintFromFile(sourceFile);
+	groupCount = extractInt(sourceFile);
+	startPos = extractUint(sourceFile);
 
 	return true;
 }
@@ -64,18 +64,18 @@ bool extractOneHeaderTriple (std::istream & sourceFile, DataHeaderParameter & on
 	std::string dummyString;
 	std::wstring dummyWstring;
 
-	extractWstringFromFile(sourceFile, dummyWstring);
+	extractWstring(sourceFile, dummyWstring);
 	oneDHParameter.setParamName(dummyWstring);
-	extractStringFromFile(sourceFile, dummyString);
+	extractString(sourceFile, dummyString);
 	oneDHParameter.setParamValue(dummyString);
-	extractWstringFromFile(sourceFile, dummyWstring);
+	extractWstring(sourceFile, dummyWstring);
 	oneDHParameter.setParamType(dummyWstring);
 
 	return true;
 }
 
 bool extractNameTypeValueTrips(std::istream & sourceFile, std::vector<DataHeaderParameter> & vectorToStoreParameters) {
-	int paramCount = extractIntFromStream(sourceFile);
+	int paramCount = extractInt(sourceFile);
 
 	vectorToStoreParameters.reserve(paramCount);
 	for (int i = 0; i < paramCount; i++) {
@@ -94,16 +94,16 @@ bool extractGenericDataHeader(std::istream & sourceFile, std::vector<DataHeaderP
 	std::wstring fileLocale;
 	int parentHeaderCount;
 
-	extractStringFromFile(sourceFile, dataTypeID);
-	extractStringFromFile(sourceFile, fileGUID);
-	extractWstringFromFile(sourceFile, timeOfCreation);
-	extractWstringFromFile(sourceFile, fileLocale);
+	extractString(sourceFile, dataTypeID);
+	extractString(sourceFile, fileGUID);
+	extractWstring(sourceFile, timeOfCreation);
+	extractWstring(sourceFile, fileLocale);
 	extractNameTypeValueTrips(sourceFile, vectorToStoreParameters);
 
 	// Extract and ignore parent Generic Data Headers
 	bool parentRecordsExtracted = true;
 	std::vector<DataHeaderParameter> parentParamVector;
-	parentHeaderCount = extractIntFromStream(sourceFile);
+	parentHeaderCount = extractInt(sourceFile);
 	parentParamVector.reserve(parentHeaderCount);
 	for (int i = 0; i < parentHeaderCount; i++) {
 		parentRecordsExtracted &= extractGenericDataHeader(sourceFile, parentParamVector);
@@ -114,17 +114,17 @@ bool extractGenericDataHeader(std::istream & sourceFile, std::vector<DataHeaderP
 
 bool extractOneColumnMeta(std::istream & sourceFile, ColumnMetadata & oneColumn) {
 	std::wstring dummyWstring;
-	extractWstringFromFile(sourceFile, dummyWstring);
+	extractWstring(sourceFile, dummyWstring);
 	oneColumn.setColumnName(dummyWstring);
-	unsigned char oneChar = extractIntegralBytesFromFile<unsigned char>(sourceFile, 1);
+	unsigned char oneChar = extractIntegralBytes<unsigned char>(sourceFile, 1);
 	//sourceFile.read((char*)&oneChar, 1);
 	oneColumn.setColumnType((ColumnTypeEnum)oneChar);
-	oneColumn.setColumnTypeSize(extractIntFromStream(sourceFile));
+	oneColumn.setColumnTypeSize(extractInt(sourceFile));
 	return true;
 }
 
 bool extractDataSetMeta(std::istream & sourceFile, std::vector<ColumnMetadata> & vectorToStoreColumnMeta) {
-	unsigned int dataSetColumnCount = extractUintFromFile(sourceFile);
+	unsigned int dataSetColumnCount = extractUint(sourceFile);
 	vectorToStoreColumnMeta.reserve(dataSetColumnCount);
 	for (unsigned int i = 0; i < dataSetColumnCount; i++) {
 		ColumnMetadata newColumnMeta;
@@ -154,7 +154,7 @@ unsigned int extractDataSet(std::istream & sourceFile, DataSet & oneDataSet) {
 		std::cout << ")\n";
 	}
 
-	unsigned int thisSetRowCount = extractUintFromFile(sourceFile);
+	unsigned int thisSetRowCount = extractUint(sourceFile);
 	std::cout << "\t\tNumber of rows: " << thisSetRowCount << "\n";
 	oneDataSet.setRowCount(thisSetRowCount);
 

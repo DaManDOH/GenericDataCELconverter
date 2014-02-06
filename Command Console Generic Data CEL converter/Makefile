@@ -20,8 +20,8 @@ debug: $(SOURCES) $(DEBUGTARGET)
 $(DEBUGTARGET): $(DEBUGOBJECTS)
 	$(CC) $(DEBUGOBJECTS) -o $@
 
-.do:
-	$(CC) $(CDEBUGFLAGS) -c $< -o $@
+.cpp.do:
+	$(CC) $(CFLAGS) $(CDEBUGFLAGS) -c $< -o $@
 
 clean:
 	rm -rf *.o *.do $(TARGET) $(DEBUGTARGET)
